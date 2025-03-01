@@ -2,6 +2,8 @@ package com.payments.users.data.usecases;
 
 import com.payments.users.data.repositories.CreateUserRepository;
 import com.payments.users.data.repositories.GetUserByEmailRepository;
+import com.payments.users.domain.CustomExceptions;
+import com.payments.users.domain.CustomExceptions;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUser;
 import com.payments.users.domain.usecases.CreateUserInput;
@@ -21,8 +23,14 @@ public class DbCreateUser implements CreateUser {
     }
 
     @Override
-    public User call(CreateUserInput input) {
-        getUserByEmailRepository.call(input.email());
+    public User call(CreateUserInput input) throws CustomExceptions {
+        if (isEmailAlreadyRegistered(input.email())) {
+            throw new CustomExceptions.EmailAlreadyRegistered();
+        }
         return createUserRepository.call(input);
+    }
+
+    private boolean isEmailAlreadyRegistered(String email) {
+        return getUserByEmailRepository.call(email).isPresent();
     }
 }

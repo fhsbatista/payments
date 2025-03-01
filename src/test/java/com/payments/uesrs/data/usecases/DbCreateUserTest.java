@@ -3,6 +3,7 @@ package com.payments.uesrs.data.usecases;
 import com.payments.users.data.repositories.CreateUserRepository;
 import com.payments.users.data.repositories.GetUserByEmailRepository;
 import com.payments.users.data.usecases.DbCreateUser;
+import com.payments.users.domain.CustomExceptions;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUserInput;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +39,7 @@ public class DbCreateUserTest {
     }
 
     @Test
-    void shouldCallRepositoryWithCorrectValues() {
+    void shouldCallRepositoryWithCorrectValues() throws CustomExceptions {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
         sut.call(input);
@@ -46,7 +47,7 @@ public class DbCreateUserTest {
     }
 
     @Test
-    void shouldThrowIfRepositoryThrows() {
+    void shouldThrowIfRepositoryThrows() throws CustomExceptions {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
         final Exception exception = new RuntimeException("test exception");
@@ -57,7 +58,7 @@ public class DbCreateUserTest {
     }
 
     @Test
-    void shouldReturnUserOnRepositorySuccess() {
+    void shouldReturnUserOnRepositorySuccess() throws CustomExceptions {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
         final User user = mock(User.class);
@@ -68,12 +69,23 @@ public class DbCreateUserTest {
     }
 
     @Test
-    void shouldCallGetUserByEmailRepositoryWithCorrectEmail() {
+    void shouldCallGetUserByEmailRepositoryWithCorrectEmail() throws CustomExceptions {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
         final User alreadyRegisteredUser = mock(User.class);
 
         sut.call(input);
         verify(getUserByEmailRepository).call(input.email());
+    }
+
+    @Test
+    void shouldThrowIfGetUserByEmailRepositoryNotReturnNull() {
+        final DbCreateUser sut = makeSut();
+        final CreateUserInput input = makeInput();
+        final User alreadyRegisteredUser = mock(User.class);
+        when(getUserByEmailRepository.call(input.email()))
+                .thenReturn(Optional.ofNullable(alreadyRegisteredUser));
+
+        assertThrows(CustomExceptions.EmailAlreadyRegistered.class, () -> sut.call(input));
     }
 }
