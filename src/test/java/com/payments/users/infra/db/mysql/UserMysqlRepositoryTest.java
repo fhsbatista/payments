@@ -2,7 +2,6 @@ package com.payments.users.infra.db.mysql;
 
 import com.payments.DatabaseCleaner;
 import com.payments.MysqlCleaner;
-import com.payments.users.data.usecases.DbCreateUser;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUserInput;
 import org.junit.jupiter.api.AfterEach;
