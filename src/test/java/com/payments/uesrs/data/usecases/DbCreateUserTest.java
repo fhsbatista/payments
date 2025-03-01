@@ -2,6 +2,7 @@ package com.payments.uesrs.data.usecases;
 
 import com.payments.users.data.repositories.CreateUserRepository;
 import com.payments.users.data.usecases.DbCreateUser;
+import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUserInput;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,5 +49,16 @@ public class DbCreateUserTest {
 
         Exception thrown = assertThrows(Exception.class, () -> sut.call(input));
         assertEquals(exception, thrown);
+    }
+
+    @Test
+    void shouldReturnUserOnRepositorySuccess() {
+        final DbCreateUser sut = makeSut();
+        final CreateUserInput input = makeInput();
+        final User user = mock(User.class);
+        when(repository.call(input)).thenReturn(user);
+
+        final User result = sut.call(input);
+        assertEquals(user, result);
     }
 }

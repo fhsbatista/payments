@@ -14,7 +14,6 @@ public class DbCreateUser implements CreateUser {
 
     @Override
     public User call(CreateUserInput input) {
-        repository.call(input);
-        return null;
+        return repository.call(input);
     }
 }
