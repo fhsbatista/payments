@@ -1,0 +1,9 @@
+CREATE TABLE USERS(
+    id BIGINT NOT NULL AUTO_INCREMENT,
+    name VARCHAR(255),
+    cpf VARCHAR(11),
+    email VARCHAR(255),
+    password VARCHAR(60),
+
+    PRIMARY KEY(ID)
+)
