@@ -22,6 +22,17 @@ public class DbCreateUserTest {
     void setup() {
         createUserRepository = mock(CreateUserRepository.class);
         getUserByEmailRepository = mock(GetUserByEmailRepository.class);
+        mockSuccess();
+    }
+
+    void mockSuccess() {
+        final User user = new User(
+                123L,
+                "John Doe",
+                "1234567800",
+                "john@doe.com"
+        );
+        when(createUserRepository.create(makeInput())).thenReturn(Optional.of(user));
     }
 
     DbCreateUser makeSut() {
@@ -46,7 +57,7 @@ public class DbCreateUserTest {
     }
 
     @Test
-    void shouldThrowIfRepositoryThrows() throws CustomExceptions {
+    void shouldThrowIfRepositoryThrows() {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
         final Exception exception = new RuntimeException("test exception");
