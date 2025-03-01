@@ -1,4 +1,4 @@
-package com.payments.uesrs.data.usecases;
+package com.payments.users.data.usecases;
 
 import com.payments.users.data.repositories.CreateUserRepository;
 import com.payments.users.data.repositories.GetUserByEmailRepository;
