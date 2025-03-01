@@ -1,8 +1,12 @@
 package com.payments.users.infra.db.mysql;
 
+import com.payments.DatabaseCleaner;
+import com.payments.MysqlCleaner;
 import com.payments.users.data.usecases.DbCreateUser;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUserInput;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.shadow.com.univocity.parsers.annotations.Nested;
@@ -12,6 +16,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserMysqlRepositoryTest {
+    private final DatabaseCleaner databaseCleaner = new MysqlCleaner();
+
     UserMysqlRepository makeSut() {
         return new UserMysqlRepository();
     }
@@ -25,6 +31,15 @@ public class UserMysqlRepositoryTest {
         );
     }
 
+    @BeforeEach
+    void setup() {
+        databaseCleaner.clean("USERS");
+    }
+
+    @AfterEach
+    void tearDown() {
+        databaseCleaner.clean("USERS");
+    }
     @Tag("create user")
     @Test
     void shouldReturnUserOnDbSuccess() {

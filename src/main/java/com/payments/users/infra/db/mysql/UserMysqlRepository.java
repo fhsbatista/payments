@@ -4,6 +4,7 @@ import com.payments.users.data.repositories.CreateUserRepository;
 import com.payments.users.data.repositories.GetUserByEmailRepository;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUserInput;
+import com.payments.util.MysqlUtil;
 
 import java.sql.*;
 import java.util.Optional;
@@ -12,15 +13,11 @@ public class UserMysqlRepository implements
         CreateUserRepository,
         GetUserByEmailRepository {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/test";
-    private static final String USER = "root";
-    private static final String PASSWORD = "root";
-
     @Override
     public Optional<User> create(CreateUserInput input) {
         final String sql = "INSERT INTO USERS (name, cpf, email) VALUES (?, ?, ?)";
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = MysqlUtil.conn();
              PreparedStatement statement = conn.prepareStatement(
                      sql,
                      Statement.RETURN_GENERATED_KEYS
@@ -32,8 +29,16 @@ public class UserMysqlRepository implements
             int affectedRows = statement.executeUpdate();
             boolean isPersisted = affectedRows > 0;
             if (isPersisted) {
-                final Optional<User> user = getByEmail(input.email());
-                return user;
+                try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        return Optional.of(new User(
+                                generatedKeys.getLong(1),
+                                input.name(),
+                                input.cpf(),
+                                input.email()
+                        ));
+                    }
+                }
 
             }
         } catch (SQLException e) {
@@ -47,7 +52,7 @@ public class UserMysqlRepository implements
     public Optional<User> getByEmail(String email) {
         final String sql = "SELECT * FROM USERS WHERE email = ?";
 
-        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+        try (Connection conn = MysqlUtil.conn();
              PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, email);
 
