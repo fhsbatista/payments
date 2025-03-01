@@ -6,8 +6,9 @@ import com.payments.users.domain.usecases.CreateUserInput;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 public class DbCreateUserTest {
     private CreateUserRepository repository;
@@ -17,16 +18,35 @@ public class DbCreateUserTest {
         repository = mock(CreateUserRepository.class);
     }
 
-    @Test
-    void shouldCallCreateAccountRepositoryWithCorrectValues() {
-        final DbCreateUser sut = new DbCreateUser(repository);
-        final CreateUserInput input = new CreateUserInput(
+    DbCreateUser makeSut() {
+        return new DbCreateUser(repository);
+    }
+
+    CreateUserInput makeInput() {
+        return new CreateUserInput(
                 "John Doe",
                 "1234567800",
                 "john@doe.com",
                 "123!@#"
         );
+    }
+
+    @Test
+    void shouldCallRepositoryWithCorrectValues() {
+        final DbCreateUser sut = makeSut();
+        final CreateUserInput input = makeInput();
         sut.call(input);
         verify(repository).call(input);
+    }
+
+    @Test
+    void shouldThrowIfRepositoryThrows() {
+        final DbCreateUser sut = makeSut();
+        final CreateUserInput input = makeInput();
+        final Exception exception = new RuntimeException("test exception");
+        when(repository.call(input)).thenThrow(exception);
+
+        Exception thrown = assertThrows(Exception.class, () -> sut.call(input));
+        assertEquals(exception, thrown);
     }
 }
