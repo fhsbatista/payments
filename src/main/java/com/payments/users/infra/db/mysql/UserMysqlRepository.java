@@ -1,17 +1,73 @@
 package com.payments.users.infra.db.mysql;
 
 import com.payments.users.data.repositories.CreateUserRepository;
+import com.payments.users.data.repositories.GetUserByEmailRepository;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUserInput;
 
-public class UserMysqlRepository implements CreateUserRepository {
+import java.sql.*;
+import java.util.Optional;
+
+public class UserMysqlRepository implements
+        CreateUserRepository,
+        GetUserByEmailRepository {
+
+    private static final String URL = "jdbc:mysql://localhost:3306/test";
+    private static final String USER = "root";
+    private static final String PASSWORD = "root";
+
     @Override
-    public User create(CreateUserInput input) {
-        return new User(
-                123L,
-                input.name(),
-                input.cpf(),
-                input.email()
-        );
+    public Optional<User> create(CreateUserInput input) {
+        final String sql = "INSERT INTO USERS (name, cpf, email) VALUES (?, ?, ?)";
+
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement statement = conn.prepareStatement(
+                     sql,
+                     Statement.RETURN_GENERATED_KEYS
+             )) {
+            statement.setString(1, input.name());
+            statement.setString(2, input.cpf());
+            statement.setString(3, input.email());
+
+            int affectedRows = statement.executeUpdate();
+            boolean isPersisted = affectedRows > 0;
+            if (isPersisted) {
+                final Optional<User> user = getByEmail(input.email());
+                return user;
+
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<User> getByEmail(String email) {
+        final String sql = "SELECT * FROM USERS WHERE email = ?";
+
+        try (Connection conn = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, email);
+
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return Optional.of(new User(
+                            result.getLong("id"),
+                            result.getString("name"),
+                            result.getString("cpf"),
+                            result.getString("email")
+                    ));
+                }
+
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+
+        return Optional.empty();
     }
 }

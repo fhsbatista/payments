@@ -61,7 +61,7 @@ public class DbCreateUserTest {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
         final User user = mock(User.class);
-        when(createUserRepository.create(input)).thenReturn(user);
+        when(createUserRepository.create(input)).thenReturn(Optional.of(user));
 
         final User result = sut.call(input);
         assertEquals(user, result);
@@ -74,7 +74,7 @@ public class DbCreateUserTest {
         final User alreadyRegisteredUser = mock(User.class);
 
         sut.call(input);
-        verify(getUserByEmailRepository).call(input.email());
+        verify(getUserByEmailRepository).getByEmail(input.email());
     }
 
     @Test
@@ -82,7 +82,7 @@ public class DbCreateUserTest {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
         final User alreadyRegisteredUser = mock(User.class);
-        when(getUserByEmailRepository.call(input.email()))
+        when(getUserByEmailRepository.getByEmail(input.email()))
                 .thenReturn(Optional.ofNullable(alreadyRegisteredUser));
 
         assertThrows(CustomExceptions.EmailAlreadyRegistered.class, () -> sut.call(input));

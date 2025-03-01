@@ -7,6 +7,8 @@ import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUser;
 import com.payments.users.domain.usecases.CreateUserInput;
 
+import java.util.Optional;
+
 public class DbCreateUser implements CreateUser {
     private final CreateUserRepository createUserRepository;
     private final GetUserByEmailRepository getUserByEmailRepository;
@@ -24,10 +26,17 @@ public class DbCreateUser implements CreateUser {
         if (isEmailAlreadyRegistered(input.email())) {
             throw new CustomExceptions.EmailAlreadyRegistered();
         }
-        return createUserRepository.create(input);
+
+        final Optional<User> result = createUserRepository.create(input);
+
+        if (result.isEmpty()) {
+            throw new CustomExceptions.PersistanceError();
+        }
+
+        return result.get();
     }
 
     private boolean isEmailAlreadyRegistered(String email) {
-        return getUserByEmailRepository.call(email).isPresent();
+        return getUserByEmailRepository.getByEmail(email).isPresent();
     }
 }

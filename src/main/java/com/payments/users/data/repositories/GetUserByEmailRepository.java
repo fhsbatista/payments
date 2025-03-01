@@ -5,5 +5,5 @@ import com.payments.users.domain.entities.User;
 import java.util.Optional;
 
 public interface GetUserByEmailRepository {
-    Optional<User> call(String email);
+    Optional<User> getByEmail(String email);
 }
