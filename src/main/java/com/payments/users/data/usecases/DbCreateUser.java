@@ -3,12 +3,9 @@ package com.payments.users.data.usecases;
 import com.payments.users.data.repositories.CreateUserRepository;
 import com.payments.users.data.repositories.GetUserByEmailRepository;
 import com.payments.users.domain.CustomExceptions;
-import com.payments.users.domain.CustomExceptions;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUser;
 import com.payments.users.domain.usecases.CreateUserInput;
-
-import java.util.Optional;
 
 public class DbCreateUser implements CreateUser {
     private final CreateUserRepository createUserRepository;
@@ -27,7 +24,7 @@ public class DbCreateUser implements CreateUser {
         if (isEmailAlreadyRegistered(input.email())) {
             throw new CustomExceptions.EmailAlreadyRegistered();
         }
-        return createUserRepository.call(input);
+        return createUserRepository.create(input);
     }
 
     private boolean isEmailAlreadyRegistered(String email) {

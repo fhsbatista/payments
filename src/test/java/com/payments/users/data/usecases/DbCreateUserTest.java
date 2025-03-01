@@ -2,7 +2,6 @@ package com.payments.users.data.usecases;
 
 import com.payments.users.data.repositories.CreateUserRepository;
 import com.payments.users.data.repositories.GetUserByEmailRepository;
-import com.payments.users.data.usecases.DbCreateUser;
 import com.payments.users.domain.CustomExceptions;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUserInput;
@@ -43,7 +42,7 @@ public class DbCreateUserTest {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
         sut.call(input);
-        verify(createUserRepository).call(input);
+        verify(createUserRepository).create(input);
     }
 
     @Test
@@ -51,7 +50,7 @@ public class DbCreateUserTest {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
         final Exception exception = new RuntimeException("test exception");
-        when(createUserRepository.call(input)).thenThrow(exception);
+        when(createUserRepository.create(input)).thenThrow(exception);
 
         Exception thrown = assertThrows(Exception.class, () -> sut.call(input));
         assertEquals(exception, thrown);
@@ -62,7 +61,7 @@ public class DbCreateUserTest {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
         final User user = mock(User.class);
-        when(createUserRepository.call(input)).thenReturn(user);
+        when(createUserRepository.create(input)).thenReturn(user);
 
         final User result = sut.call(input);
         assertEquals(user, result);

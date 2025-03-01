@@ -4,5 +4,5 @@ import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUserInput;
 
 public interface CreateUserRepository {
-    User call(CreateUserInput input);
+    User create(CreateUserInput input);
 }
