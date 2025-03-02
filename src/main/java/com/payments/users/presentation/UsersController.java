@@ -5,6 +5,8 @@ import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUser;
 import com.payments.users.domain.usecases.CreateUserInput;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -18,7 +20,8 @@ public class UsersController {
         this.usecase = usecase;
     }
 
-    public ResponseEntity<?> handle(CreateUserInput input) {
+    @PostMapping("/users")
+    public ResponseEntity<?> handle(@RequestBody CreateUserInput input) {
         try {
             final User user = usecase.call(input);
             final UriComponentsBuilder uriBuilder = UriComponentsBuilder.newInstance();
