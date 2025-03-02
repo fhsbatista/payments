@@ -26,7 +26,9 @@ public class UsersController {
 
             return ResponseEntity.created(uri).body(UserPresenter.fromUser(user));
         } catch (CustomExceptions e) {
-            return ResponseEntity.badRequest().body(ErrorPresenter.fromCustomException(e));
+            return ResponseEntity.badRequest().body(ErrorPresenter.fromException(e));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ErrorPresenter.fromException(e));
         }
     }
 }

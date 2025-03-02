@@ -33,12 +33,12 @@ public class CreateUserControllerTest {
     }
 
     @BeforeEach
-    void setup() throws CustomExceptions {
+    void setup() throws Exception {
         usecase = mock(CreateUser.class);
         mockSuccess();
     }
 
-    void mockSuccess() throws CustomExceptions {
+    void mockSuccess() throws Exception {
         final User user = new User(
                 123L,
                 "John Doe",
@@ -48,12 +48,12 @@ public class CreateUserControllerTest {
         when(usecase.call(any())).thenReturn(user);
     }
 
-    void mockFailure(CustomExceptions exception) throws CustomExceptions {
+    void mockFailure(CustomExceptions exception) throws Exception {
         when(usecase.call(any())).thenThrow(exception);
     }
 
     @Test
-    void shouldCallCreateUserUsecaseWithCorrectValues() throws CustomExceptions {
+    void shouldCallCreateUserUsecaseWithCorrectValues() throws Exception {
         final UsersController sut = makeSut();
         final CreateUserInput input = makeInput();
 
@@ -78,7 +78,7 @@ public class CreateUserControllerTest {
     }
 
     @Test
-    void shouldReturn400WithCorrectMessageOnUsecaseCustomException() throws CustomExceptions {
+    void shouldReturn400WithCorrectMessageOnUsecaseCustomException() throws Exception {
         final UsersController sut = makeSut();
         final CreateUserInput input = makeInput();
         final CustomExceptions exception = new CustomExceptions.EmailAlreadyRegistered();
@@ -91,5 +91,19 @@ public class CreateUserControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
         assertNotNull(responseBody);
         assertEquals(exceptionMessage, responseBody.message());
+    }
+
+    @Test
+    void shouldReturn500OnUsecaseNotKnownException() throws Exception {
+        final UsersController sut = makeSut();
+        final CreateUserInput input = makeInput();
+        when(usecase.call(input)).thenThrow(new Exception());
+
+        final ResponseEntity<?> response = sut.handle(input);
+        final var responseBody = (ErrorPresenter) response.getBody();
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), response.getStatusCode().value());
+        assertNotNull(responseBody);
+        assertNotNull("Internal server error", responseBody.message());
     }
 }
