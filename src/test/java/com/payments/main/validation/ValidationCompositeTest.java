@@ -8,8 +8,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 public class ValidationCompositeTest {
     private Validation validation1;
@@ -49,5 +48,20 @@ public class ValidationCompositeTest {
 
         ValidationException thrown = assertThrows(exception1.getClass(), () -> sut.validate(""));
         assertEquals(exception1, thrown);
+        verify(validation2, times(0)).validate(any());
     }
+
+    @Test
+    void shouldIterateAllValidationsIfNoneFails() throws ValidationException {
+        final ValidationComposite sut = makeSut();
+        final ValidationException exception1 = new ValidationException();
+        final ValidationException exception2 = new ValidationException();
+
+        sut.validate("");
+
+        verify(validation1, times(1)).validate(any());
+        verify(validation2, times(1)).validate(any());
+    }
+
+
 }
