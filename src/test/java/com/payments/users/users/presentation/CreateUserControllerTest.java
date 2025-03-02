@@ -4,6 +4,7 @@ import com.payments.users.domain.CustomExceptions;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUser;
 import com.payments.users.domain.usecases.CreateUserInput;
+import com.payments.users.presentation.ErrorPresenter;
 import com.payments.users.presentation.UserPresenter;
 import com.payments.users.presentation.UsersController;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +48,10 @@ public class CreateUserControllerTest {
         when(usecase.call(any())).thenReturn(user);
     }
 
+    void mockFailure(CustomExceptions exception) throws CustomExceptions {
+        when(usecase.call(any())).thenThrow(exception);
+    }
+
     @Test
     void shouldCallCreateUserUsecaseWithCorrectValues() throws CustomExceptions {
         final UsersController sut = makeSut();
@@ -62,13 +67,29 @@ public class CreateUserControllerTest {
         final UsersController sut = makeSut();
         final CreateUserInput input = makeInput();
 
-        final ResponseEntity<UserPresenter> response = sut.handle(input);
-        final UserPresenter user = response.getBody();
+        final ResponseEntity<?> response = sut.handle(input);
+        final UserPresenter user = (UserPresenter) response.getBody();
 
         assertEquals(HttpStatus.CREATED.value(), response.getStatusCode().value());
         assertNotNull(user);
         assertEquals(input.name(), user.name());
         assertEquals(input.cpf(), user.cpf());
         assertEquals(input.email(), user.email());
+    }
+
+    @Test
+    void shouldReturn400WithCorrectMessageOnUsecaseCustomException() throws CustomExceptions {
+        final UsersController sut = makeSut();
+        final CreateUserInput input = makeInput();
+        final CustomExceptions exception = new CustomExceptions.EmailAlreadyRegistered();
+        final String exceptionMessage = ErrorPresenter.DICTIONARY.get(exception.getClass());
+        mockFailure(exception);
+
+        final ResponseEntity<?> response = sut.handle(input);
+        final var responseBody = (ErrorPresenter) response.getBody();
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
+        assertNotNull(responseBody);
+        assertEquals(exceptionMessage, responseBody.message());
     }
 }

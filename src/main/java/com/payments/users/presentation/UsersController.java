@@ -18,11 +18,15 @@ public class UsersController {
         this.usecase = usecase;
     }
 
-    public ResponseEntity<UserPresenter> handle(CreateUserInput input) throws CustomExceptions {
-        final User user = usecase.call(input);
-        final UriComponentsBuilder uriBuilder = UriComponentsBuilder.newInstance();
-        final URI uri = uriBuilder.path("/users/{id}").buildAndExpand(user.id()).toUri();
+    public ResponseEntity<?> handle(CreateUserInput input) {
+        try {
+            final User user = usecase.call(input);
+            final UriComponentsBuilder uriBuilder = UriComponentsBuilder.newInstance();
+            final URI uri = uriBuilder.path("/users/{id}").buildAndExpand(user.id()).toUri();
 
-        return ResponseEntity.created(uri).body(UserPresenter.fromUser(user));
+            return ResponseEntity.created(uri).body(UserPresenter.fromUser(user));
+        } catch (CustomExceptions e) {
+            return ResponseEntity.badRequest().body(ErrorPresenter.fromCustomException(e));
+        }
     }
 }
