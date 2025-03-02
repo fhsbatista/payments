@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
@@ -34,6 +35,19 @@ public class ValidationCompositeTest {
         final ValidationException exception = new ValidationException();
         doThrow(exception).when(validation1).validate(any());
 
-        assertThrows(exception.getClass(), () -> sut.validate(""));
+        ValidationException thrown = assertThrows(exception.getClass(), () -> sut.validate(""));
+        assertEquals(exception, thrown);
+    }
+
+    @Test
+    void shouldReturnFirstErrorIfMoreThanOneValidationFail() throws ValidationException {
+        final ValidationComposite sut = makeSut();
+        final ValidationException exception1 = new ValidationException();
+        final ValidationException exception2 = new ValidationException();
+        doThrow(exception1).when(validation1).validate(any());
+        doThrow(exception2).when(validation2).validate(any());
+
+        ValidationException thrown = assertThrows(exception1.getClass(), () -> sut.validate(""));
+        assertEquals(exception1, thrown);
     }
 }
