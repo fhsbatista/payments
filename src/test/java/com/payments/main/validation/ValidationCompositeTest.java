@@ -5,8 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -54,8 +53,6 @@ public class ValidationCompositeTest {
     @Test
     void shouldIterateAllValidationsIfNoneFails() throws ValidationException {
         final ValidationComposite sut = makeSut();
-        final ValidationException exception1 = new ValidationException();
-        final ValidationException exception2 = new ValidationException();
 
         sut.validate("");
 
@@ -63,5 +60,10 @@ public class ValidationCompositeTest {
         verify(validation2, times(1)).validate(any());
     }
 
+    @Test
+    void shouldNotThrowIfNoValidationThrows() throws ValidationException {
+        final ValidationComposite sut = makeSut();
 
+        assertDoesNotThrow(() -> sut.validate(""));
+    }
 }
