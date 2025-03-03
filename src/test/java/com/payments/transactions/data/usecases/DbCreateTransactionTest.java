@@ -66,4 +66,15 @@ public class DbCreateTransactionTest {
         Exception thrown = assertThrows(Exception.class, () -> sut.call(input));
         assertEquals(exception, thrown);
     }
+
+    @Test
+    void shouldReturnTransactionOnRepositorySuccess() throws CustomExceptions {
+        final DbCreateTransaction sut = makeSut();
+        final CreateTransactionInput input = makeInput();
+        final Transaction transaction = mock(Transaction.class);
+        when(createTransactionRepository.create(input)).thenReturn(Optional.of(transaction));
+
+        final Transaction result = sut.call(input);
+        assertEquals(transaction, result);
+    }
 }

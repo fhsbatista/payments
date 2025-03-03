@@ -6,6 +6,8 @@ import com.payments.transactions.domain.entities.Transaction;
 import com.payments.transactions.domain.usecases.CreateTransaction;
 import com.payments.transactions.domain.usecases.CreateTransactionInput;
 
+import java.util.Optional;
+
 public class DbCreateTransaction implements CreateTransaction {
     private final CreateTransactionRepository createTransactionRepository;
 
@@ -15,7 +17,12 @@ public class DbCreateTransaction implements CreateTransaction {
 
     @Override
     public Transaction call(CreateTransactionInput input) throws CustomExceptions {
-        createTransactionRepository.create(input);
-        return null;
+        final Optional<Transaction> transaction = createTransactionRepository.create(input);
+
+        if (transaction.isEmpty()) {
+            throw new CustomExceptions.PersistanceError();
+        }
+
+        return transaction.get();
     }
 }
