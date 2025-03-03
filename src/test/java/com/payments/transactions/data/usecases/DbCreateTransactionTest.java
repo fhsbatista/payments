@@ -1,6 +1,7 @@
 package com.payments.transactions.data.usecases;
 
 import com.payments.transactions.data.repositories.CreateTransactionRepository;
+import com.payments.transactions.data.repositories.GetUserBalanceRepository;
 import com.payments.transactions.domain.CustomExceptions;
 import com.payments.transactions.domain.entities.Transaction;
 import com.payments.transactions.domain.usecases.CreateTransactionInput;
@@ -17,10 +18,12 @@ import static org.mockito.Mockito.*;
 
 public class DbCreateTransactionTest {
     private CreateTransactionRepository createTransactionRepository;
+    private GetUserBalanceRepository getUserBalanceRepository;
 
     @BeforeEach
     void setup() {
         createTransactionRepository = mock(CreateTransactionRepository.class);
+        getUserBalanceRepository = mock(GetUserBalanceRepository.class);
         mockSuccess();
     }
 
@@ -31,11 +34,15 @@ public class DbCreateTransactionTest {
                 BigDecimal.valueOf(2300.0),
                 Instant.now()
         );
-        when(createTransactionRepository.create(makeInput())).thenReturn(Optional.of(transaction));
+        when(createTransactionRepository.create(makeInput()))
+                .thenReturn(Optional.of(transaction));
     }
 
     DbCreateTransaction makeSut() {
-        return new DbCreateTransaction(createTransactionRepository);
+        return new DbCreateTransaction(
+                createTransactionRepository,
+                getUserBalanceRepository
+        );
     }
 
     CreateTransactionInput makeInput() {
@@ -75,6 +82,20 @@ public class DbCreateTransactionTest {
         when(createTransactionRepository.create(input)).thenReturn(Optional.of(transaction));
 
         final Transaction result = sut.call(input);
+
         assertEquals(transaction, result);
     }
+
+    @Test
+    void shouldCallGetBalanceRepositoryWithCorrectId() throws CustomExceptions {
+        final DbCreateTransaction sut = makeSut();
+        final CreateTransactionInput input = makeInput();
+        final BigDecimal balance = BigDecimal.valueOf(5000.0);
+
+        sut.call(input);
+
+        verify(getUserBalanceRepository).getUserBalance(input.payerId());
+    }
+
+
 }
