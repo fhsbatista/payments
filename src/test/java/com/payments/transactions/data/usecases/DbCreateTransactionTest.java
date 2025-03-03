@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 public class DbCreateTransactionTest {
@@ -52,5 +54,16 @@ public class DbCreateTransactionTest {
         sut.call(input);
 
         verify(createTransactionRepository).create(input);
+    }
+
+    @Test
+    void shouldThrowIfRepositoryThrows() {
+        final DbCreateTransaction sut = makeSut();
+        final CreateTransactionInput input = makeInput();
+        final Exception exception = new RuntimeException("test exception");
+        when(createTransactionRepository.create(input)).thenThrow(exception);
+
+        Exception thrown = assertThrows(Exception.class, () -> sut.call(input));
+        assertEquals(exception, thrown);
     }
 }
