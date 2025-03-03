@@ -1,5 +1,7 @@
 package com.payments.transactions.presentation;
 
+import com.payments.main.validation.Validation;
+import com.payments.main.validation.ValidationException;
 import com.payments.transactions.domain.CustomExceptions;
 import com.payments.transactions.domain.entities.Transaction;
 import com.payments.transactions.domain.usecases.CreateTransaction;
@@ -18,10 +20,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 public class TransactionsControllerTest {
+    private Validation validation;
     private CreateTransaction usecase;
 
     TransactionsController makeSut() {
-        return new TransactionsController(usecase);
+        return new TransactionsController(validation, usecase);
     }
 
     CreateTransactionInput makeInput() {
@@ -44,6 +47,7 @@ public class TransactionsControllerTest {
 
     @BeforeEach
     void setup() throws Exception {
+        validation = mock(Validation.class);
         usecase = mock(CreateTransaction.class);
         mockSuccess();
     }
@@ -112,5 +116,15 @@ public class TransactionsControllerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), response.getStatusCode().value());
         assertNotNull(responseBody);
         assertNotNull("Internal server error", responseBody.message());
+    }
+
+    @Test
+    void shouldCallValidationWithCorrectValues() throws ValidationException {
+        final TransactionsController sut = makeSut();
+        final CreateTransactionInput input = makeInput();
+
+        sut.handle(input);
+
+        verify(validation).validate(input);
     }
 }
