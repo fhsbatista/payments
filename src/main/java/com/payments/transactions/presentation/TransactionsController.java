@@ -1,6 +1,7 @@
 package com.payments.transactions.presentation;
 
 import com.payments.main.validation.Validation;
+import com.payments.main.validation.ValidationException;
 import com.payments.transactions.domain.CustomExceptions;
 import com.payments.transactions.domain.entities.Transaction;
 import com.payments.transactions.domain.usecases.CreateTransaction;
@@ -35,6 +36,8 @@ public class TransactionsController {
                     .body(TransactionPresenter.fromTransaction(transaction));
         } catch (CustomExceptions e) {
             return ResponseEntity.badRequest().body(ErrorPresenter.fromException(e));
+        } catch (ValidationException e) {
+            return ResponseEntity.badRequest().body(ErrorPresenter.fromValidationException(e));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(ErrorPresenter.fromException(e));
         }
