@@ -31,9 +31,13 @@ public class DbCreateTransaction implements CreateTransaction {
         return transaction.get();
     }
 
-    private boolean isBalanceValid(CreateTransactionInput input) {
+    private boolean isBalanceValid(CreateTransactionInput input) throws CustomExceptions.UnknownBalance {
         final Optional<BigDecimal> balance = getUserBalanceRepository
                 .getUserBalance(input.payerId());
+
+        if (balance.isEmpty()) {
+            throw new CustomExceptions.UnknownBalance();
+        }
 
         return input.amount().compareTo(balance.get()) <= 0;
     }

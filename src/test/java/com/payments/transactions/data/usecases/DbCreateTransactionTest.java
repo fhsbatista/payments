@@ -34,6 +34,8 @@ public class DbCreateTransactionTest {
                 BigDecimal.valueOf(2300.0),
                 Instant.now()
         );
+        when(getUserBalanceRepository.getUserBalance(any()))
+                .thenReturn(Optional.of(BigDecimal.valueOf(10000.0)));
         when(createTransactionRepository.create(any()))
                 .thenReturn(Optional.of(transaction));
     }
@@ -113,6 +115,15 @@ public class DbCreateTransactionTest {
         when(getUserBalanceRepository.getUserBalance(any())).thenReturn(Optional.of(balance));
 
         assertThrows(CustomExceptions.InsufficientFunds.class, () -> sut.call(input));
+    }
+
+    @Test
+    void shouldThrowIfGetUserBalanceRepositoryNotReturnBalance() {
+        final DbCreateTransaction sut = makeSut();
+        final CreateTransactionInput input = makeInput();
+        when(getUserBalanceRepository.getUserBalance(any())).thenReturn(Optional.empty());
+
+        assertThrows(CustomExceptions.UnknownBalance.class, () -> sut.call(input));
     }
 
 
