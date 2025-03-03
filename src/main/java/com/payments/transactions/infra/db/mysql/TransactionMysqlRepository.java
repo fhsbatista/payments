@@ -1,19 +1,16 @@
 package com.payments.transactions.infra.db.mysql;
 
 import com.payments.transactions.data.repositories.CreateTransactionRepository;
-import com.payments.transactions.data.repositories.GetUserBalanceRepository;
 import com.payments.transactions.domain.entities.Transaction;
 import com.payments.transactions.domain.usecases.CreateTransactionInput;
 import com.payments.util.MysqlUtil;
 
-import java.math.BigDecimal;
 import java.sql.*;
 import java.time.Instant;
 import java.util.Optional;
 
 public class TransactionMysqlRepository implements
-        CreateTransactionRepository,
-        GetUserBalanceRepository {
+        CreateTransactionRepository {
 
     @Override
     public Optional<Transaction> create(CreateTransactionInput input) {
@@ -52,11 +49,6 @@ public class TransactionMysqlRepository implements
             e.printStackTrace();
         }
 
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<BigDecimal> getUserBalance(Long userId) {
         return Optional.empty();
     }
 }
