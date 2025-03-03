@@ -5,12 +5,6 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-record TestInput(
-        String fieldName,
-        String otherFieldName
-) {
-}
-
 public class RequiredFieldValidationTest {
     @Test
     void shouldThrowMissingFieldIfFieldIsMissing() {
