@@ -1,5 +1,7 @@
 package com.payments.users.users.presentation;
 
+import com.payments.main.validation.Validation;
+import com.payments.main.validation.ValidationException;
 import com.payments.users.domain.CustomExceptions;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUser;
@@ -17,10 +19,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 public class CreateUserControllerTest {
+    private Validation validation;
     private CreateUser usecase;
 
     UsersController makeSut() {
-        return new UsersController(usecase);
+        return new UsersController(validation, usecase);
     }
 
     CreateUserInput makeInput() {
@@ -34,6 +37,7 @@ public class CreateUserControllerTest {
 
     @BeforeEach
     void setup() throws Exception {
+        validation = mock(Validation.class);
         usecase = mock(CreateUser.class);
         mockSuccess();
     }
@@ -105,5 +109,30 @@ public class CreateUserControllerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), response.getStatusCode().value());
         assertNotNull(responseBody);
         assertNotNull("Internal server error", responseBody.message());
+    }
+
+    @Test
+    void shouldCallValidationWithCorrectValues() throws ValidationException {
+        final UsersController sut = makeSut();
+        final CreateUserInput input = makeInput();
+
+        sut.handle(input);
+
+        verify(validation).validate(input);
+    }
+
+    @Test
+    void shouldReturn400WithCorrectBodyIfValidationThrows() throws ValidationException {
+        final UsersController sut = makeSut();
+        final CreateUserInput input = makeInput();
+        doThrow(new ValidationException.MissingField("document"))
+                .when(validation).validate(input);
+
+        final ResponseEntity<?> response = sut.handle(input);
+        final ErrorPresenter body = (ErrorPresenter) response.getBody();
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
+        assertNotNull(body);
+        assertEquals("document is missing", body.message());
     }
 }

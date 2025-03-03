@@ -1,5 +1,9 @@
 package com.payments;
 
+import com.payments.main.validation.EmailValidation;
+import com.payments.main.validation.RequiredFieldValidation;
+import com.payments.main.validation.Validation;
+import com.payments.main.validation.ValidationComposite;
 import com.payments.users.data.repositories.CreateUserRepository;
 import com.payments.users.data.repositories.GetUserByEmailRepository;
 import com.payments.users.data.usecases.DbCreateUser;
@@ -9,11 +13,22 @@ import com.payments.users.presentation.UsersController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 @Configuration
 public class AppConfig {
     @Bean
     public UsersController usersController() {
-        return new UsersController(createUser());
+        final List<Validation> validations = List.of(
+                new RequiredFieldValidation("name"),
+                new RequiredFieldValidation("cpf"),
+                new RequiredFieldValidation("email"),
+                new RequiredFieldValidation("password"),
+                new EmailValidation("email")
+        );
+        final ValidationComposite validationComposite = new ValidationComposite(validations);
+
+        return new UsersController(validationComposite, createUser());
     }
 
     @Bean
