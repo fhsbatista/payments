@@ -30,6 +30,8 @@ public class TransactionsController {
                     .created(uri)
                     .body(TransactionPresenter.fromTransaction(transaction));
         } catch (CustomExceptions e) {
+            return ResponseEntity.badRequest().body(ErrorPresenter.fromException(e));
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

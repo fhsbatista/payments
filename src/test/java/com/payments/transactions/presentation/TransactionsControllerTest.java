@@ -52,6 +52,10 @@ public class TransactionsControllerTest {
         when(usecase.call(any())).thenReturn(makeTransaction());
     }
 
+    void mockFailure(CustomExceptions exception) throws Exception {
+        when(usecase.call(any())).thenThrow(exception);
+    }
+
     @Test
     void shouldCallCreateTransactionUsecaseWithCorrectValues() throws Exception {
         final TransactionsController sut = makeSut();
@@ -78,5 +82,21 @@ public class TransactionsControllerTest {
         assertEquals(expectedTransaction.payeeId(), transaction.payeeId());
         assertEquals(expectedTransaction.amount(), transaction.amount());
         assertEquals(expectedTransaction.time(), transaction.time());
+    }
+
+    @Test
+    void shouldReturn400WithCorrectMessageOnUsecaseCustomException() throws Exception {
+        final TransactionsController sut = makeSut();
+        final CreateTransactionInput input = makeInput();
+        final CustomExceptions exception = new CustomExceptions.InsufficientFunds();
+        final String exceptionMessage = ErrorPresenter.DICTIONARY.get(exception.getClass());
+        mockFailure(exception);
+
+        final ResponseEntity<?> response = sut.handle(input);
+        final var responseBody = (ErrorPresenter) response.getBody();
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
+        assertNotNull(responseBody);
+        assertEquals(exceptionMessage, responseBody.message());
     }
 }
