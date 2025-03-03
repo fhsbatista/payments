@@ -29,6 +29,7 @@ public class DbCreateTransactionTest {
 
     void mockSuccess() {
         final Transaction transaction = new Transaction(
+                1L,
                 123L,
                 124L,
                 BigDecimal.valueOf(2300.0),
@@ -125,6 +126,4 @@ public class DbCreateTransactionTest {
 
         assertThrows(CustomExceptions.UnknownBalance.class, () -> sut.call(input));
     }
-
-
 }

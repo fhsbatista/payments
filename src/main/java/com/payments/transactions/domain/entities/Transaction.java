@@ -4,8 +4,9 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public record Transaction(
+        Long id,
         Long payerId,
         Long payeeId,
         BigDecimal amount,
-        Instant instant) {
+        Instant time) {
 }
