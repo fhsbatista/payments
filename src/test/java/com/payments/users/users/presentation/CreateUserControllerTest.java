@@ -120,4 +120,19 @@ public class CreateUserControllerTest {
 
         verify(validation).validate(input);
     }
+
+    @Test
+    void shouldReturn400WithCorrectBodyIfValidationThrows() throws ValidationException {
+        final UsersController sut = makeSut();
+        final CreateUserInput input = makeInput();
+        doThrow(new ValidationException.MissingField("document"))
+                .when(validation).validate(input);
+
+        final ResponseEntity<?> response = sut.handle(input);
+        final ErrorPresenter body = (ErrorPresenter) response.getBody();
+
+        assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
+        assertNotNull(body);
+        assertEquals("document is missing", body.message());
+    }
 }

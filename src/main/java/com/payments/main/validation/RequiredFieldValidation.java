@@ -17,10 +17,10 @@ public class RequiredFieldValidation implements Validation {
             Object value = field.get(input);
 
             if (value == null) {
-                throw new ValidationException.MissingField();
+                throw new ValidationException.MissingField(fieldName);
             }
         } catch (NoSuchFieldException e) {
-            throw new ValidationException.MissingField();
+            throw new ValidationException.MissingField(fieldName);
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }

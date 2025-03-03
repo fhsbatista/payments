@@ -1,6 +1,7 @@
 package com.payments.users.presentation;
 
 import com.payments.main.validation.Validation;
+import com.payments.main.validation.ValidationException;
 import com.payments.users.domain.CustomExceptions;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUser;
@@ -35,6 +36,8 @@ public class UsersController {
             return ResponseEntity.created(uri).body(UserPresenter.fromUser(user));
         } catch (CustomExceptions e) {
             return ResponseEntity.badRequest().body(ErrorPresenter.fromException(e));
+        } catch (ValidationException e) {
+            return ResponseEntity.badRequest().body(ErrorPresenter.fromValidationException(e));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(ErrorPresenter.fromException(e));
         }

@@ -1,5 +1,6 @@
 package com.payments.users.presentation;
 
+import com.payments.main.validation.ValidationException;
 import com.payments.users.domain.CustomExceptions;
 
 import java.util.Map;
@@ -10,13 +11,17 @@ public record ErrorPresenter(String message) {
             CustomExceptions.PersistanceError.class, "Could not persist user on databas. Try again later."
     );
 
-    public static ErrorPresenter fromException(Exception exception) {
-        final String message = DICTIONARY.get(exception.getClass());
+    public static ErrorPresenter fromException(Exception e) {
+        final String message = DICTIONARY.get(e.getClass());
 
         if (message == null) {
             return new ErrorPresenter("Internal server error");
         }
 
-        return new ErrorPresenter(DICTIONARY.get(exception.getClass()));
+        return new ErrorPresenter(DICTIONARY.get(e.getClass()));
+    }
+
+    public static ErrorPresenter fromValidationException(ValidationException e) {
+        return new ErrorPresenter(e.toString());
     }
 }
