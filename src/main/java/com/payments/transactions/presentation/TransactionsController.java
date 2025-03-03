@@ -7,10 +7,14 @@ import com.payments.transactions.domain.entities.Transaction;
 import com.payments.transactions.domain.usecases.CreateTransaction;
 import com.payments.transactions.domain.usecases.CreateTransactionInput;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
 
+@RestController
 public class TransactionsController {
     private final Validation validation;
     private final CreateTransaction usecase;
@@ -20,7 +24,8 @@ public class TransactionsController {
         this.usecase = usecase;
     }
 
-    ResponseEntity<?> handle(CreateTransactionInput input) {
+    @PostMapping("/transactions")
+    ResponseEntity<?> handle(@RequestBody CreateTransactionInput input) {
         try {
             validation.validate(input);
             final Transaction transaction = usecase.call(input);
