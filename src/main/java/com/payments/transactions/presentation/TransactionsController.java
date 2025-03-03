@@ -32,7 +32,7 @@ public class TransactionsController {
         } catch (CustomExceptions e) {
             return ResponseEntity.badRequest().body(ErrorPresenter.fromException(e));
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            return ResponseEntity.internalServerError().body(ErrorPresenter.fromException(e));
         }
     }
 }

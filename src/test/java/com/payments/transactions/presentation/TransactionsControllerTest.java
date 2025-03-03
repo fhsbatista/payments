@@ -43,12 +43,12 @@ public class TransactionsControllerTest {
     }
 
     @BeforeEach
-    void setup() throws CustomExceptions {
+    void setup() throws Exception {
         usecase = mock(CreateTransaction.class);
         mockSuccess();
     }
 
-    void mockSuccess() throws CustomExceptions {
+    void mockSuccess() throws Exception {
         when(usecase.call(any())).thenReturn(makeTransaction());
     }
 
@@ -67,7 +67,7 @@ public class TransactionsControllerTest {
     }
 
     @Test
-    void shouldReturn201WithTransactionOnUsecaseSuccess() throws CustomExceptions {
+    void shouldReturn201WithTransactionOnUsecaseSuccess() throws Exception {
         final TransactionsController sut = makeSut();
         final CreateTransactionInput input = makeInput();
         final Transaction expectedTransaction = makeTransaction();
@@ -98,5 +98,19 @@ public class TransactionsControllerTest {
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatusCode().value());
         assertNotNull(responseBody);
         assertEquals(exceptionMessage, responseBody.message());
+    }
+
+    @Test
+    void shouldReturn500OnUsecaseNotKnownException() throws Exception {
+        final TransactionsController sut = makeSut();
+        final CreateTransactionInput input = makeInput();
+        when(usecase.call(input)).thenThrow(new Exception());
+
+        final ResponseEntity<?> response = sut.handle(input);
+        final var responseBody = (ErrorPresenter) response.getBody();
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.value(), response.getStatusCode().value());
+        assertNotNull(responseBody);
+        assertNotNull("Internal server error", responseBody.message());
     }
 }
