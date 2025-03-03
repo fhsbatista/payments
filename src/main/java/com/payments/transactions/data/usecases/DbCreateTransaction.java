@@ -7,6 +7,7 @@ import com.payments.transactions.domain.entities.Transaction;
 import com.payments.transactions.domain.usecases.CreateTransaction;
 import com.payments.transactions.domain.usecases.CreateTransactionInput;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 public class DbCreateTransaction implements CreateTransaction {
@@ -23,13 +24,17 @@ public class DbCreateTransaction implements CreateTransaction {
 
     @Override
     public Transaction call(CreateTransactionInput input) throws CustomExceptions {
-        getUserBalanceRepository.getUserBalance(input.payerId());
+        if (!isBalanceValid(input)) throw new CustomExceptions.InsufficientFunds();
         final Optional<Transaction> transaction = createTransactionRepository.create(input);
-
-        if (transaction.isEmpty()) {
-            throw new CustomExceptions.PersistanceError();
-        }
+        if (transaction.isEmpty()) throw new CustomExceptions.PersistanceError();
 
         return transaction.get();
+    }
+
+    private boolean isBalanceValid(CreateTransactionInput input) {
+        final Optional<BigDecimal> balance = getUserBalanceRepository
+                .getUserBalance(input.payerId());
+
+        return input.amount().compareTo(balance.get()) <= 0;
     }
 }

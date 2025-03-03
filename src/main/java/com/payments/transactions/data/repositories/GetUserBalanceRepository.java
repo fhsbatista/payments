@@ -1,9 +1,8 @@
 package com.payments.transactions.data.repositories;
 
-import com.payments.transactions.domain.entities.Transaction;
-
+import java.math.BigDecimal;
 import java.util.Optional;
 
 public interface GetUserBalanceRepository {
-    Optional<Transaction> getUserBalance(Long userId);
+    Optional<BigDecimal> getUserBalance(Long userId);
 }

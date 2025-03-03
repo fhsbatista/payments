@@ -34,7 +34,7 @@ public class DbCreateTransactionTest {
                 BigDecimal.valueOf(2300.0),
                 Instant.now()
         );
-        when(createTransactionRepository.create(makeInput()))
+        when(createTransactionRepository.create(any()))
                 .thenReturn(Optional.of(transaction));
     }
 
@@ -50,6 +50,14 @@ public class DbCreateTransactionTest {
                 123L,
                 123L,
                 BigDecimal.valueOf(100.0)
+        );
+    }
+
+    CreateTransactionInput makeInput(BigDecimal amount) {
+        return new CreateTransactionInput(
+                123L,
+                123L,
+                amount
         );
     }
 
@@ -90,11 +98,21 @@ public class DbCreateTransactionTest {
     void shouldCallGetBalanceRepositoryWithCorrectId() throws CustomExceptions {
         final DbCreateTransaction sut = makeSut();
         final CreateTransactionInput input = makeInput();
-        final BigDecimal balance = BigDecimal.valueOf(5000.0);
 
         sut.call(input);
 
         verify(getUserBalanceRepository).getUserBalance(input.payerId());
+    }
+
+    @Test
+    void shouldThrowIfBalanceIsNotEnough() {
+        final DbCreateTransaction sut = makeSut();
+        final BigDecimal balance = BigDecimal.valueOf(1.0);
+        final CreateTransactionInput input = makeInput(balance.add(BigDecimal.valueOf(5.0)));
+
+        when(getUserBalanceRepository.getUserBalance(any())).thenReturn(Optional.of(balance));
+
+        assertThrows(CustomExceptions.InsufficientFunds.class, () -> sut.call(input));
     }
 
 
