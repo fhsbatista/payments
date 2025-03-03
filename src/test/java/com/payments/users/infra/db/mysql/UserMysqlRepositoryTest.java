@@ -54,9 +54,9 @@ public class UserMysqlRepositoryTest {
         //Verify hashed pass when it is implemented
     }
 
-    @Tag("create user")
+    @Tag("get user by email")
     @Test
-    void shouldPersistUserOnDbCorrectly() {
+    void shouldReturnUserByEmailCorrectly() {
         final UserMysqlRepository sut = makeSut();
         final CreateUserInput input = makeInput();
 
