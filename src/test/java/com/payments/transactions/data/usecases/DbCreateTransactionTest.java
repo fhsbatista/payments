@@ -4,6 +4,7 @@ import com.payments.transactions.data.repositories.CreateTransactionRepository;
 import com.payments.transactions.data.repositories.GetUserBalanceRepository;
 import com.payments.transactions.domain.CustomExceptions;
 import com.payments.transactions.domain.entities.Transaction;
+import com.payments.transactions.domain.usecases.Authorizer;
 import com.payments.transactions.domain.usecases.CreateTransactionInput;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,11 +20,13 @@ import static org.mockito.Mockito.*;
 public class DbCreateTransactionTest {
     private CreateTransactionRepository createTransactionRepository;
     private GetUserBalanceRepository getUserBalanceRepository;
+    private Authorizer authorizer;
 
     @BeforeEach
     void setup() {
         createTransactionRepository = mock(CreateTransactionRepository.class);
         getUserBalanceRepository = mock(GetUserBalanceRepository.class);
+        authorizer = mock(Authorizer.class);
         mockSuccess();
     }
 
@@ -39,12 +42,14 @@ public class DbCreateTransactionTest {
                 .thenReturn(Optional.of(BigDecimal.valueOf(10000.0)));
         when(createTransactionRepository.create(any()))
                 .thenReturn(Optional.of(transaction));
+        when(authorizer.isAuthorized(any())).thenReturn(true);
     }
 
     DbCreateTransaction makeSut() {
         return new DbCreateTransaction(
                 createTransactionRepository,
-                getUserBalanceRepository
+                getUserBalanceRepository,
+                authorizer
         );
     }
 
@@ -62,6 +67,16 @@ public class DbCreateTransactionTest {
                 123L,
                 amount
         );
+    }
+
+    @Test
+    void shouldCallAuthorizerWithCorrectValues() throws CustomExceptions {
+        final DbCreateTransaction sut = makeSut();
+        final CreateTransactionInput input = makeInput();
+
+        sut.call(input);
+
+        verify(authorizer).isAuthorized(input);
     }
 
     @Test

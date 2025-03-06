@@ -7,6 +7,8 @@ import com.payments.main.validation.ValidationComposite;
 import com.payments.transactions.data.repositories.CreateTransactionRepository;
 import com.payments.transactions.data.repositories.GetUserBalanceRepository;
 import com.payments.transactions.data.usecases.DbCreateTransaction;
+import com.payments.transactions.data.usecases.HttpAuthorizer;
+import com.payments.transactions.domain.usecases.Authorizer;
 import com.payments.transactions.domain.usecases.CreateTransaction;
 import com.payments.transactions.infra.db.mysql.TransactionMysqlRepository;
 import com.payments.transactions.infra.mock.TransactionMockRepository;
@@ -19,6 +21,7 @@ import com.payments.users.infra.db.mysql.UserMysqlRepository;
 import com.payments.users.presentation.UsersController;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -72,7 +75,8 @@ public class AppConfig {
     public CreateTransaction createTransaction() {
         return new DbCreateTransaction(
                 createTransactionRepository(),
-                getUserBalanceRepository()
+                getUserBalanceRepository(),
+                authorizer()
         );
     }
 
@@ -82,5 +86,13 @@ public class AppConfig {
 
     public GetUserBalanceRepository getUserBalanceRepository() {
         return new TransactionMockRepository();
+    }
+
+    public Authorizer authorizer() {
+        return new HttpAuthorizer(restTemplate());
+    }
+
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
     }
 }
