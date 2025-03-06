@@ -28,25 +28,34 @@ public class DbCreateTransaction implements CreateTransaction {
 
     @Override
     public Transaction call(CreateTransactionInput input) throws CustomExceptions {
-        final boolean isAuthorized = authorizer.isAuthorized(input);
-        if (!isAuthorized) throw new CustomExceptions.NotAuthorized();
+        checkAuthorization(input);
+        checkBalance(input);
 
-        if (!isBalanceValid(input)) throw new CustomExceptions.InsufficientFunds();
-        
-        final Optional<Transaction> transaction = createTransactionRepository.create(input);
-        if (transaction.isEmpty()) throw new CustomExceptions.PersistanceError();
-
-        return transaction.get();
+        return createTransaction(input);
     }
 
-    private boolean isBalanceValid(CreateTransactionInput input) throws CustomExceptions.UnknownBalance {
-        final Optional<BigDecimal> balance = getUserBalanceRepository
-                .getUserBalance(input.payerId());
+    private void checkAuthorization(CreateTransactionInput input) throws CustomExceptions.NotAuthorized {
+        final boolean isAuthorized = authorizer.isAuthorized(input);
+        if (!isAuthorized) throw new CustomExceptions.NotAuthorized();
+    }
+
+    private void checkBalance(CreateTransactionInput input)
+            throws CustomExceptions.InsufficientFunds, CustomExceptions.UnknownBalance {
+        final Optional<BigDecimal> balance = getUserBalanceRepository.getUserBalance(input.payerId());
 
         if (balance.isEmpty()) {
             throw new CustomExceptions.UnknownBalance();
         }
 
-        return input.amount().compareTo(balance.get()) <= 0;
+        final boolean hasEnoughBalance = input.amount().compareTo(balance.get()) <= 0;
+
+        if (!hasEnoughBalance) throw new CustomExceptions.InsufficientFunds();
+    }
+
+    private Transaction createTransaction(CreateTransactionInput input) throws CustomExceptions.PersistanceError {
+        final Optional<Transaction> transaction = createTransactionRepository.create(input);
+        if (transaction.isEmpty()) throw new CustomExceptions.PersistanceError();
+
+        return transaction.get();
     }
 }
