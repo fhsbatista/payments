@@ -28,8 +28,11 @@ public class DbCreateTransaction implements CreateTransaction {
 
     @Override
     public Transaction call(CreateTransactionInput input) throws CustomExceptions {
-        authorizer.isAuthorized(input);
+        final boolean isAuthorized = authorizer.isAuthorized(input);
+        if (!isAuthorized) throw new CustomExceptions.NotAuthorized();
+
         if (!isBalanceValid(input)) throw new CustomExceptions.InsufficientFunds();
+        
         final Optional<Transaction> transaction = createTransactionRepository.create(input);
         if (transaction.isEmpty()) throw new CustomExceptions.PersistanceError();
 

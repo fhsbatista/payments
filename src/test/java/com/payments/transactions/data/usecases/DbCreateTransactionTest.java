@@ -8,6 +8,7 @@ import com.payments.transactions.domain.usecases.Authorizer;
 import com.payments.transactions.domain.usecases.CreateTransactionInput;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.TransactionException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -75,6 +76,17 @@ public class DbCreateTransactionTest {
         final CreateTransactionInput input = makeInput();
 
         sut.call(input);
+
+        verify(authorizer).isAuthorized(input);
+    }
+
+    @Test
+    void shouldThrowIfAuthorizerReturnsFalse() throws CustomExceptions {
+        final DbCreateTransaction sut = makeSut();
+        final CreateTransactionInput input = makeInput();
+        when(authorizer.isAuthorized(any())).thenReturn(false);
+
+        assertThrows(CustomExceptions.NotAuthorized.class, () -> sut.call(input));
 
         verify(authorizer).isAuthorized(input);
     }
