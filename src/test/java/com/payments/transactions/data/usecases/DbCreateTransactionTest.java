@@ -48,6 +48,8 @@ public class DbCreateTransactionTest {
                 BigDecimal.valueOf(2300.0),
                 Instant.now()
         );
+        final User user = makeUser();
+        when(getUserByIdRepository.getById(any())).thenReturn(Optional.of(user));
         when(getUserBalanceRepository.getUserBalance(any()))
                 .thenReturn(Optional.of(BigDecimal.valueOf(10000.0)));
         when(createTransactionRepository.create(any()))
@@ -111,6 +113,18 @@ public class DbCreateTransactionTest {
 
         verify(getUserByIdRepository).getById(payer.id());
         verify(getUserByIdRepository).getById(payee.id());
+    }
+
+    @Test
+    void shouldThrowIfGetUserByIdRepositoryCannotFindPayerId() throws CustomExceptions {
+        final DbCreateTransaction sut = makeSut();
+        final User payer = makeUser();
+        final User payee = makeUser();
+        final CreateTransactionInput input = makeInput(payer, payee);
+        when(getUserByIdRepository.getById(payer.id())).thenReturn(Optional.empty());
+        when(getUserByIdRepository.getById(payee.id())).thenReturn(Optional.of(payee));
+
+        assertThrows(CustomExceptions.PayerNotFound.class, () -> sut.call(input)) ;
     }
 
     @Test

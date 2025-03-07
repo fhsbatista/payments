@@ -42,6 +42,8 @@ public class DbCreateTransaction implements CreateTransaction {
         final Optional<User> payer = getUserByIdRepository.getById(input.payerId());
         final Optional<User> payee = getUserByIdRepository.getById(input.payeeId());
 
+        if (payer.isEmpty()) throw new CustomExceptions.PayerNotFound();
+
         final SendNotificationInput payerNotification = new SendNotificationInput(
                 payer.get().email(),
                 "Your transaction has been cleared"
