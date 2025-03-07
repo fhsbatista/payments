@@ -43,6 +43,7 @@ public class DbCreateTransaction implements CreateTransaction {
         final Optional<User> payee = getUserByIdRepository.getById(input.payeeId());
 
         if (payer.isEmpty()) throw new CustomExceptions.PayerNotFound();
+        if (payee.isEmpty()) throw new CustomExceptions.PayeeNotFound();
 
         final SendNotificationInput payerNotification = new SendNotificationInput(
                 payer.get().email(),

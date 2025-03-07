@@ -128,6 +128,18 @@ public class DbCreateTransactionTest {
     }
 
     @Test
+    void shouldThrowIfGetUserByIdRepositoryCannotFindPayeeId() throws CustomExceptions {
+        final DbCreateTransaction sut = makeSut();
+        final User payer = makeUser();
+        final User payee = makeUser();
+        final CreateTransactionInput input = makeInput(payer, payee);
+        when(getUserByIdRepository.getById(payer.id())).thenReturn(Optional.of(payer));
+        when(getUserByIdRepository.getById(payee.id())).thenReturn(Optional.empty());
+
+        assertThrows(CustomExceptions.PayeeNotFound.class, () -> sut.call(input)) ;
+    }
+
+    @Test
     void shouldCallAuthorizerWithCorrectValues() throws CustomExceptions {
         final DbCreateTransaction sut = makeSut();
         final CreateTransactionInput input = makeInput();
