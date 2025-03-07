@@ -80,6 +80,27 @@ public class UserMysqlRepository implements
 
     @Override
     public Optional<User> getById(Long id) {
+        final String sql = "SELECT * FROM USERS WHERE id = ?";
+
+        try (Connection conn = MysqlUtil.conn();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setLong(1, id);
+
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return Optional.of(new User(
+                            result.getLong("id"),
+                            result.getString("name"),
+                            result.getString("cpf"),
+                            result.getString("email")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         return Optional.empty();
+
     }
 }
