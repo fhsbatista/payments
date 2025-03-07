@@ -18,6 +18,7 @@ public record ErrorPresenter(String message) {
         final String message = DICTIONARY.get(e.getClass());
 
         if (message == null) {
+            e.printStackTrace();
             return new ErrorPresenter("Internal server error");
         }
 
