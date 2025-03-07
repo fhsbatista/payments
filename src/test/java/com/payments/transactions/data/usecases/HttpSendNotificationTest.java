@@ -41,7 +41,7 @@ class HttpSendNotificationTest {
     }
 
     @Test
-    void shouldReturnFalseIfRestTemplateNotReturn200() {
+    void shouldReturnFalseIfRestTemplateNotReturn2xx() {
         final HttpSendNotification sut = makeSut();
         final SendNotificationInput input = mock(SendNotificationInput.class);
         when(restTemplate.postForEntity(anyString(), any(), eq(String.class)))
@@ -50,5 +50,15 @@ class HttpSendNotificationTest {
         final boolean result = sut.send(input);
 
         assertFalse(result);
+    }
+
+    @Test
+    void shouldReturnTrueIfRestTemplateReturn2xx() {
+        final HttpSendNotification sut = makeSut();
+        final SendNotificationInput input = mock(SendNotificationInput.class);
+
+        final boolean result = sut.send(input);
+
+        assertTrue(result);
     }
 }
