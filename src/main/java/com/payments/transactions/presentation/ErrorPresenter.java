@@ -7,6 +7,8 @@ import java.util.Map;
 
 public record ErrorPresenter(String message) {
     public static final Map<Class<? extends Exception>, String> DICTIONARY = Map.of(
+            CustomExceptions.PayerNotFound.class, "Payer not found",
+            CustomExceptions.PayeeNotFound.class, "Payee not found",
             CustomExceptions.PersistanceError.class, "Could not persist transaction on database. Try again later.",
             CustomExceptions.InsufficientFunds.class, "Payer has not enough balance.",
             CustomExceptions.UnknownBalance.class, "Could not get payer's balance. Try again later."

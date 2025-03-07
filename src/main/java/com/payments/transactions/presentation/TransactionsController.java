@@ -44,6 +44,7 @@ public class TransactionsController {
         } catch (ValidationException e) {
             return ResponseEntity.badRequest().body(ErrorPresenter.fromValidationException(e));
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.internalServerError().body(ErrorPresenter.fromException(e));
         }
     }
