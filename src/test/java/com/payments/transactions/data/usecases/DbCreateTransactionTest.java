@@ -99,6 +99,21 @@ public class DbCreateTransactionTest {
     }
 
     @Test
+    void shouldCallGetUserByIdRepositoryForBothPayerAndPayeeIds() throws CustomExceptions {
+        final DbCreateTransaction sut = makeSut();
+        final User payer = makeUser();
+        final User payee = makeUser();
+        final CreateTransactionInput input = makeInput(payer, payee);
+        when(getUserByIdRepository.getById(payer.id())).thenReturn(Optional.of(payer));
+        when(getUserByIdRepository.getById(payee.id())).thenReturn(Optional.of(payee));
+
+        sut.call(input);
+
+        verify(getUserByIdRepository).getById(payer.id());
+        verify(getUserByIdRepository).getById(payee.id());
+    }
+
+    @Test
     void shouldCallAuthorizerWithCorrectValues() throws CustomExceptions {
         final DbCreateTransaction sut = makeSut();
         final CreateTransactionInput input = makeInput();
@@ -192,9 +207,6 @@ public class DbCreateTransactionTest {
         when(getUserByIdRepository.getById(payee.id())).thenReturn(Optional.of(payee));
 
         sut.call(input);
-
-        verify(getUserByIdRepository).getById(payer.id());
-        verify(getUserByIdRepository).getById(payee.id());
 
         final var payerNotification = new SendNotificationInput(payer.email(), "Your transaction has been cleared");
         final var payeeNotification = new SendNotificationInput(payee.email(), "You have received a transaction");
