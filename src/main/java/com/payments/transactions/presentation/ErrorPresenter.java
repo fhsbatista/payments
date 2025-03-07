@@ -11,7 +11,8 @@ public record ErrorPresenter(String message) {
             CustomExceptions.PayeeNotFound.class, "Payee not found",
             CustomExceptions.PersistanceError.class, "Could not persist transaction on database. Try again later.",
             CustomExceptions.InsufficientFunds.class, "Payer has not enough balance.",
-            CustomExceptions.UnknownBalance.class, "Could not get payer's balance. Try again later."
+            CustomExceptions.UnknownBalance.class, "Could not get payer's balance. Try again later.",
+            CustomExceptions.NotAuthorized.class, "Transaction has been not authorized."
     );
 
     public static ErrorPresenter fromException(Exception e) {
