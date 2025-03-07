@@ -4,6 +4,7 @@ import com.payments.main.validation.EmailValidation;
 import com.payments.main.validation.RequiredFieldValidation;
 import com.payments.main.validation.Validation;
 import com.payments.main.validation.ValidationComposite;
+import com.payments.shared.infra.HttpNoExceptionErrorHandler;
 import com.payments.transactions.data.repositories.CreateTransactionRepository;
 import com.payments.transactions.data.repositories.GetUserBalanceRepository;
 import com.payments.transactions.data.usecases.DbCreateTransaction;
@@ -106,6 +107,9 @@ public class AppConfig {
     }
 
     public RestTemplate restTemplate() {
-        return new RestTemplate();
+        final RestTemplate restTemplate = new RestTemplate();
+        restTemplate.setErrorHandler(new HttpNoExceptionErrorHandler());
+
+        return restTemplate;
     }
 }
