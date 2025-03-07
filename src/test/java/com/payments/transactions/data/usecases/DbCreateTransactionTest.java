@@ -196,9 +196,9 @@ public class DbCreateTransactionTest {
         verify(getUserByIdRepository).getById(payer.id());
         verify(getUserByIdRepository).getById(payee.id());
 
-//        final var payerNotification = new SendNotificationInput(payer.email(), "payer notification");
-//        final var payeeNotification = new SendNotificationInput(payee.email(), "payee notification");
-//        verify(sendNotification).send(payerNotification);
-//        verify(sendNotification).send(payeeNotification);
+        final var payerNotification = new SendNotificationInput(payer.email(), "Your transaction has been cleared");
+        final var payeeNotification = new SendNotificationInput(payee.email(), "You have received a transaction");
+        verify(sendNotification).send(payerNotification);
+        verify(sendNotification).send(payeeNotification);
     }
 }

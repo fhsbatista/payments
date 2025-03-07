@@ -6,6 +6,7 @@ import com.payments.transactions.domain.CustomExceptions;
 import com.payments.transactions.domain.entities.Transaction;
 import com.payments.transactions.domain.usecases.*;
 import com.payments.users.data.repositories.GetUserByIdRepository;
+import com.payments.users.domain.entities.User;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -38,8 +39,22 @@ public class DbCreateTransaction implements CreateTransaction {
 
         final Transaction transaction = createTransaction(input);
 
-        getUserByIdRepository.getById(input.payerId());
-        getUserByIdRepository.getById(input.payeeId());
+        final Optional<User> payer = getUserByIdRepository.getById(input.payerId());
+        final Optional<User> payee = getUserByIdRepository.getById(input.payeeId());
+
+        final SendNotificationInput payerNotification = new SendNotificationInput(
+                payer.get().email(),
+                "Your transaction has been cleared"
+        );
+
+        final SendNotificationInput payeeNotification = new SendNotificationInput(
+                payee.get().email(),
+        "You have received a transaction"
+        );
+
+
+        sendNotification.send(payerNotification);
+        sendNotification.send(payeeNotification);
 
         return transaction;
     }
