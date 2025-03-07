@@ -2,6 +2,7 @@ package com.payments.users.infra.db.mysql;
 
 import com.payments.users.data.repositories.CreateUserRepository;
 import com.payments.users.data.repositories.GetUserByEmailRepository;
+import com.payments.users.data.repositories.GetUserByIdRepository;
 import com.payments.users.domain.entities.User;
 import com.payments.users.domain.usecases.CreateUserInput;
 import com.payments.util.MysqlUtil;
@@ -11,7 +12,8 @@ import java.util.Optional;
 
 public class UserMysqlRepository implements
         CreateUserRepository,
-        GetUserByEmailRepository {
+        GetUserByEmailRepository,
+        GetUserByIdRepository {
 
     @Override
     public Optional<User> create(CreateUserInput input) {
@@ -73,6 +75,11 @@ public class UserMysqlRepository implements
         }
 
 
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<User> getById(Long id) {
         return Optional.empty();
     }
 }

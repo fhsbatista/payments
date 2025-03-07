@@ -8,13 +8,16 @@ import com.payments.transactions.data.repositories.CreateTransactionRepository;
 import com.payments.transactions.data.repositories.GetUserBalanceRepository;
 import com.payments.transactions.data.usecases.DbCreateTransaction;
 import com.payments.transactions.data.usecases.HttpAuthorizer;
+import com.payments.transactions.data.usecases.HttpSendNotification;
 import com.payments.transactions.domain.usecases.Authorizer;
 import com.payments.transactions.domain.usecases.CreateTransaction;
+import com.payments.transactions.domain.usecases.SendNotification;
 import com.payments.transactions.infra.db.mysql.TransactionMysqlRepository;
 import com.payments.transactions.infra.mock.TransactionMockRepository;
 import com.payments.transactions.presentation.TransactionsController;
 import com.payments.users.data.repositories.CreateUserRepository;
 import com.payments.users.data.repositories.GetUserByEmailRepository;
+import com.payments.users.data.repositories.GetUserByIdRepository;
 import com.payments.users.data.usecases.DbCreateUser;
 import com.payments.users.domain.usecases.CreateUser;
 import com.payments.users.infra.db.mysql.UserMysqlRepository;
@@ -74,10 +77,16 @@ public class AppConfig {
     @Bean
     public CreateTransaction createTransaction() {
         return new DbCreateTransaction(
+                authorizer(),
                 createTransactionRepository(),
                 getUserBalanceRepository(),
-                authorizer()
+                sendNotification(),
+                getUserByIdRepository()
         );
+    }
+
+    public Authorizer authorizer() {
+        return new HttpAuthorizer(restTemplate());
     }
 
     public CreateTransactionRepository createTransactionRepository() {
@@ -88,8 +97,12 @@ public class AppConfig {
         return new TransactionMockRepository();
     }
 
-    public Authorizer authorizer() {
-        return new HttpAuthorizer(restTemplate());
+    public GetUserByIdRepository getUserByIdRepository() {
+        return new UserMysqlRepository();
+    }
+
+    public SendNotification sendNotification() {
+        return new HttpSendNotification();
     }
 
     public RestTemplate restTemplate() {

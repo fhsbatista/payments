@@ -4,26 +4,31 @@ import com.payments.transactions.data.repositories.CreateTransactionRepository;
 import com.payments.transactions.data.repositories.GetUserBalanceRepository;
 import com.payments.transactions.domain.CustomExceptions;
 import com.payments.transactions.domain.entities.Transaction;
-import com.payments.transactions.domain.usecases.Authorizer;
-import com.payments.transactions.domain.usecases.CreateTransaction;
-import com.payments.transactions.domain.usecases.CreateTransactionInput;
+import com.payments.transactions.domain.usecases.*;
+import com.payments.users.data.repositories.GetUserByIdRepository;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
 public class DbCreateTransaction implements CreateTransaction {
+    private final Authorizer authorizer;
     private final CreateTransactionRepository createTransactionRepository;
     private final GetUserBalanceRepository getUserBalanceRepository;
-    private final Authorizer authorizer;
+    private final SendNotification sendNotification;
+    private final GetUserByIdRepository getUserByIdRepository;
 
     public DbCreateTransaction(
+            Authorizer authorizer,
             CreateTransactionRepository createTransactionRepository,
             GetUserBalanceRepository getUserBalanceRepository,
-            Authorizer authorizer
+            SendNotification sendNotification,
+            GetUserByIdRepository getUserByIdRepository
     ) {
         this.createTransactionRepository = createTransactionRepository;
         this.getUserBalanceRepository = getUserBalanceRepository;
         this.authorizer = authorizer;
+        this.sendNotification = sendNotification;
+        this.getUserByIdRepository = getUserByIdRepository;
     }
 
     @Override
@@ -31,7 +36,12 @@ public class DbCreateTransaction implements CreateTransaction {
         checkAuthorization(input);
         checkBalance(input);
 
-        return createTransaction(input);
+        final Transaction transaction = createTransaction(input);
+
+        getUserByIdRepository.getById(input.payerId());
+        getUserByIdRepository.getById(input.payeeId());
+
+        return transaction;
     }
 
     private void checkAuthorization(CreateTransactionInput input) throws CustomExceptions.NotAuthorized {

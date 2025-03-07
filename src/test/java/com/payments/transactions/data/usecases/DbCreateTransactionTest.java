@@ -6,6 +6,10 @@ import com.payments.transactions.domain.CustomExceptions;
 import com.payments.transactions.domain.entities.Transaction;
 import com.payments.transactions.domain.usecases.Authorizer;
 import com.payments.transactions.domain.usecases.CreateTransactionInput;
+import com.payments.transactions.domain.usecases.SendNotification;
+import com.payments.transactions.domain.usecases.SendNotificationInput;
+import com.payments.users.data.repositories.GetUserByIdRepository;
+import com.payments.users.domain.entities.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.TransactionException;
@@ -13,21 +17,26 @@ import org.springframework.transaction.TransactionException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 public class DbCreateTransactionTest {
+    private Authorizer authorizer;
     private CreateTransactionRepository createTransactionRepository;
     private GetUserBalanceRepository getUserBalanceRepository;
-    private Authorizer authorizer;
+    private SendNotification sendNotification;
+    private GetUserByIdRepository getUserByIdRepository;
 
     @BeforeEach
     void setup() {
+        authorizer = mock(Authorizer.class);
         createTransactionRepository = mock(CreateTransactionRepository.class);
         getUserBalanceRepository = mock(GetUserBalanceRepository.class);
-        authorizer = mock(Authorizer.class);
+        sendNotification = mock(SendNotification.class);
+        getUserByIdRepository = mock(GetUserByIdRepository.class);
         mockSuccess();
     }
 
@@ -48,16 +57,26 @@ public class DbCreateTransactionTest {
 
     DbCreateTransaction makeSut() {
         return new DbCreateTransaction(
+                authorizer,
                 createTransactionRepository,
                 getUserBalanceRepository,
-                authorizer
+                sendNotification,
+                getUserByIdRepository
+        );
+    }
+
+    CreateTransactionInput makeInput(User payer, User payee) {
+        return new CreateTransactionInput(
+                payer.id(),
+                payee.id(),
+                BigDecimal.valueOf(100.0)
         );
     }
 
     CreateTransactionInput makeInput() {
         return new CreateTransactionInput(
-                123L,
-                123L,
+                makeUser().id(),
+                makeUser().id(),
                 BigDecimal.valueOf(100.0)
         );
     }
@@ -67,6 +86,15 @@ public class DbCreateTransactionTest {
                 123L,
                 123L,
                 amount
+        );
+    }
+
+    User makeUser() {
+        return new User(
+                new Random().nextLong(),
+                "user test",
+                "1234567800",
+                "user@test.com"
         );
     }
 
@@ -152,5 +180,25 @@ public class DbCreateTransactionTest {
         when(getUserBalanceRepository.getUserBalance(any())).thenReturn(Optional.empty());
 
         assertThrows(CustomExceptions.UnknownBalance.class, () -> sut.call(input));
+    }
+
+    @Test
+    void shouldCallSendNotificationCorrectly() throws CustomExceptions {
+        final DbCreateTransaction sut = makeSut();
+        final User payer = makeUser();
+        final User payee = makeUser();
+        final CreateTransactionInput input = makeInput(payer, payee);
+        when(getUserByIdRepository.getById(payer.id())).thenReturn(Optional.of(payer));
+        when(getUserByIdRepository.getById(payee.id())).thenReturn(Optional.of(payee));
+
+        sut.call(input);
+
+        verify(getUserByIdRepository).getById(payer.id());
+        verify(getUserByIdRepository).getById(payee.id());
+
+//        final var payerNotification = new SendNotificationInput(payer.email(), "payer notification");
+//        final var payeeNotification = new SendNotificationInput(payee.email(), "payee notification");
+//        verify(sendNotification).send(payerNotification);
+//        verify(sendNotification).send(payeeNotification);
     }
 }
