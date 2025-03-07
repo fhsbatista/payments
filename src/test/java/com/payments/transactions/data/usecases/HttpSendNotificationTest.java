@@ -25,7 +25,7 @@ class HttpSendNotificationTest {
     }
 
     void mockSuccess() {
-        when(restTemplate.getForEntity(anyString(), eq(String.class)))
+        when(restTemplate.postForEntity(anyString(), any(), eq(String.class)))
                 .thenReturn(ResponseEntity.ok(""));
     }
 
@@ -38,5 +38,17 @@ class HttpSendNotificationTest {
 
         final RequestModel expectedParams = new RequestModel(input.email(), input.message());
         verify(restTemplate).postForEntity(HttpSendNotification.URL, expectedParams, String.class);
+    }
+
+    @Test
+    void shouldReturnFalseIfRestTemplateNotReturn200() {
+        final HttpSendNotification sut = makeSut();
+        final SendNotificationInput input = mock(SendNotificationInput.class);
+        when(restTemplate.postForEntity(anyString(), any(), eq(String.class)))
+                .thenReturn(ResponseEntity.badRequest().build());
+
+        final boolean result = sut.send(input);
+
+        assertFalse(result);
     }
 }
