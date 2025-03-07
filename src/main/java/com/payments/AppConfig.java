@@ -102,7 +102,7 @@ public class AppConfig {
     }
 
     public SendNotification sendNotification() {
-        return new HttpSendNotification();
+        return new HttpSendNotification(restTemplate());
     }
 
     public RestTemplate restTemplate() {
