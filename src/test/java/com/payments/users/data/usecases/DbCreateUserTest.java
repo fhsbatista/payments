@@ -89,7 +89,6 @@ public class DbCreateUserTest {
     void shouldCallGetUserByEmailRepositoryWithCorrectEmail() throws CustomExceptions {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
-        final User alreadyRegisteredUser = mock(User.class);
 
         sut.call(input);
         verify(getUserByEmailRepository).getByEmail(input.email());
@@ -110,9 +109,19 @@ public class DbCreateUserTest {
     void shouldCallGetUserByCpfRepositoryWithCorrectCpf() throws CustomExceptions {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
-        final User alreadyRegisteredUser = mock(User.class);
 
         sut.call(input);
         verify(getUserByCpfRepository).getByCpf(input.cpf());
+    }
+
+    @Test
+    void shouldThrowIfGetUserByCpfRepositoryNotReturnNull() {
+        final DbCreateUser sut = makeSut();
+        final CreateUserInput input = makeInput();
+        final User alreadyRegisteredUser = mock(User.class);
+        when(getUserByCpfRepository.getByCpf(input.cpf()))
+                .thenReturn(Optional.ofNullable(alreadyRegisteredUser));
+
+        assertThrows(CustomExceptions.CpfAlreadyRegistered.class, () -> sut.call(input));
     }
 }

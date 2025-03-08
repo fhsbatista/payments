@@ -32,7 +32,7 @@ public class DbCreateUser implements CreateUser {
         }
 
         if (isCpfAlreadyRegistered(input.cpf())) {
-            throw new CustomExceptions.EmailAlreadyRegistered();
+            throw new CustomExceptions.CpfAlreadyRegistered();
         }
 
         final Optional<User> result = createUserRepository.create(input);
