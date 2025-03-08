@@ -103,11 +103,30 @@ public class UserMysqlRepository implements
         }
 
         return Optional.empty();
-
     }
 
     @Override
     public Optional<User> getByCpf(String cpf) {
+        final String sql = "SELECT * FROM USERS WHERE cpf = ?";
+
+        try (Connection conn = MysqlUtil.conn();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, cpf);
+
+            try (ResultSet result = statement.executeQuery()) {
+                if (result.next()) {
+                    return Optional.of(new User(
+                            result.getLong("id"),
+                            result.getString("name"),
+                            result.getString("cpf"),
+                            result.getString("email")
+                    ));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         return Optional.empty();
     }
 }
