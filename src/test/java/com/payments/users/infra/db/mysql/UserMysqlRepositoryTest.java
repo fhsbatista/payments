@@ -84,4 +84,20 @@ public class UserMysqlRepositoryTest {
         assertEquals(userCreated.cpf(), user.get().cpf());
         assertEquals(userCreated.email(), user.get().email());
     }
+
+    @Tag("get user by cpf")
+    @Test
+    void shouldReturnUserByCpfCorrectly() {
+        final UserMysqlRepository sut = makeSut();
+        final CreateUserInput input = makeInput();
+
+        final User userCreated = sut.create(input).get();
+        final Optional<User> user = sut.getByCpf(userCreated.cpf());
+
+        assertTrue(user.isPresent());
+        assertEquals(userCreated.id(), user.get().id());
+        assertEquals(userCreated.name(), user.get().name());
+        assertEquals(userCreated.cpf(), user.get().cpf());
+        assertEquals(userCreated.email(), user.get().email());
+    }
 }

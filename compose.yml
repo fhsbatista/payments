@@ -1,17 +1,18 @@
 services:
   server:
-    build:
-      context: .
+    build: .
+    entrypoint: wait-for db:3306 -t 40 -- ./app/.docker/entrypoint.sh
     ports:
-      - 8080:8080
+      - "8080:8080"
     depends_on:
       - db
+
   db:
-    image: mysql:5.7
+    build: ./.docker/mysql
     container_name: mysql
     restart: always
     ports:
-      - 3306:3306
+      - "3306:3306"
     environment:
       - MYSQL_DATABASE=test
       - MYSQL_ROOT_PASSWORD=root

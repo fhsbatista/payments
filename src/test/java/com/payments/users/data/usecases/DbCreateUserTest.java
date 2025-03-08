@@ -1,6 +1,7 @@
 package com.payments.users.data.usecases;
 
 import com.payments.users.data.repositories.CreateUserRepository;
+import com.payments.users.data.repositories.GetUserByCpfRepository;
 import com.payments.users.data.repositories.GetUserByEmailRepository;
 import com.payments.users.domain.CustomExceptions;
 import com.payments.users.domain.entities.User;
@@ -17,11 +18,13 @@ import static org.mockito.Mockito.*;
 public class DbCreateUserTest {
     private CreateUserRepository createUserRepository;
     private GetUserByEmailRepository getUserByEmailRepository;
+    private GetUserByCpfRepository getUserByCpfRepository;
 
     @BeforeEach
     void setup() {
         createUserRepository = mock(CreateUserRepository.class);
         getUserByEmailRepository = mock(GetUserByEmailRepository.class);
+        getUserByCpfRepository = mock(GetUserByCpfRepository.class);
         mockSuccess();
     }
 
@@ -36,7 +39,11 @@ public class DbCreateUserTest {
     }
 
     DbCreateUser makeSut() {
-        return new DbCreateUser(createUserRepository, getUserByEmailRepository);
+        return new DbCreateUser(
+                createUserRepository,
+                getUserByEmailRepository,
+                getUserByCpfRepository
+        );
     }
 
     CreateUserInput makeInput() {
@@ -82,7 +89,6 @@ public class DbCreateUserTest {
     void shouldCallGetUserByEmailRepositoryWithCorrectEmail() throws CustomExceptions {
         final DbCreateUser sut = makeSut();
         final CreateUserInput input = makeInput();
-        final User alreadyRegisteredUser = mock(User.class);
 
         sut.call(input);
         verify(getUserByEmailRepository).getByEmail(input.email());
@@ -97,5 +103,25 @@ public class DbCreateUserTest {
                 .thenReturn(Optional.ofNullable(alreadyRegisteredUser));
 
         assertThrows(CustomExceptions.EmailAlreadyRegistered.class, () -> sut.call(input));
+    }
+
+    @Test
+    void shouldCallGetUserByCpfRepositoryWithCorrectCpf() throws CustomExceptions {
+        final DbCreateUser sut = makeSut();
+        final CreateUserInput input = makeInput();
+
+        sut.call(input);
+        verify(getUserByCpfRepository).getByCpf(input.cpf());
+    }
+
+    @Test
+    void shouldThrowIfGetUserByCpfRepositoryNotReturnNull() {
+        final DbCreateUser sut = makeSut();
+        final CreateUserInput input = makeInput();
+        final User alreadyRegisteredUser = mock(User.class);
+        when(getUserByCpfRepository.getByCpf(input.cpf()))
+                .thenReturn(Optional.ofNullable(alreadyRegisteredUser));
+
+        assertThrows(CustomExceptions.CpfAlreadyRegistered.class, () -> sut.call(input));
     }
 }

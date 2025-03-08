@@ -8,6 +8,7 @@ import java.util.Map;
 public record ErrorPresenter(String message) {
     public static final Map<Class<? extends Exception>, String> DICTIONARY = Map.of(
             CustomExceptions.EmailAlreadyRegistered.class, "Email is already registered.",
+            CustomExceptions.CpfAlreadyRegistered.class, "Cpf is already registered.",
             CustomExceptions.PersistanceError.class, "Could not persist user on databas. Try again later."
     );
 
