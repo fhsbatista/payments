@@ -17,6 +17,7 @@ import com.payments.transactions.infra.db.mysql.TransactionMysqlRepository;
 import com.payments.transactions.infra.mock.TransactionMockRepository;
 import com.payments.transactions.presentation.TransactionsController;
 import com.payments.users.data.repositories.CreateUserRepository;
+import com.payments.users.data.repositories.GetUserByCpfRepository;
 import com.payments.users.data.repositories.GetUserByEmailRepository;
 import com.payments.users.data.repositories.GetUserByIdRepository;
 import com.payments.users.data.usecases.DbCreateUser;
@@ -61,7 +62,8 @@ public class AppConfig {
     public CreateUser createUser() {
         return new DbCreateUser(
                 createUserRepository(),
-                getUserByEmailRepository()
+                getUserByEmailRepository(),
+                getUserByCpfRepository()
         );
     }
 
@@ -72,6 +74,11 @@ public class AppConfig {
 
     @Bean
     public GetUserByEmailRepository getUserByEmailRepository() {
+        return new UserMysqlRepository();
+    }
+
+    @Bean
+    public GetUserByCpfRepository getUserByCpfRepository() {
         return new UserMysqlRepository();
     }
 
