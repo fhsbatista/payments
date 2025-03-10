@@ -1,0 +1,11 @@
+
+CREATE TABLE AUTHORIZATIONS (
+    id INT AUTO_INCREMENT,
+    payer_id BIGINT NOT NULL,
+    payee_id BIGINT NOT NULL,
+    amount DECIMAL(15, 2),
+    time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status VARCHAR(50),
+
+    PRIMARY KEY(id)
+);
