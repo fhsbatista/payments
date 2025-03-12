@@ -2,8 +2,10 @@ package usecases
 
 import (
 	"authorization/domain"
+	"errors"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
 
@@ -26,4 +28,16 @@ func Test_ShouldCallRepositoryCorrectly(t *testing.T) {
 
 	mockSaveRepository.AssertCalled(t, "Save", input)
 	mockSaveRepository.AssertExpectations(t)
+}
+
+func Test_ShouldReturnErrorIfRepositoryFails(t *testing.T) {
+	input := domain.TransactionInput{}
+	mockSaveRepository := new(MockSaveTransactionsRepository)
+	expectedError := errors.New("Could not save transaction")
+	mockSaveRepository.On("Save", input).Return(expectedError)
+	usecase := DbAuthorizeTransactionUsecase{mockSaveRepository}
+	
+	err := usecase.Call(input)
+
+	assert.Equal(t, expectedError, err, "error should be the expected")
 }

@@ -14,7 +14,11 @@ func NewDbAuthorizeTransactionUsecase(saveTransactionRepository repositories.Sav
 }
 
 func (u *DbAuthorizeTransactionUsecase) Call(input domain.TransactionInput) error {
-	u.saveTransactionRepository.Save(input)
+	err := u.saveTransactionRepository.Save(input)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
