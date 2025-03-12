@@ -9,13 +9,20 @@ import (
 const APIURL = "https://util.devi.tools/api/v2/authorize"
 
 type DbAuthorizeTransactionUsecase struct {
-	saveTransactionRepository repositories.SaveTransactionRepository
-	httpClient http.HttpClient
+	saveTransactionRepository       repositories.SaveTransactionRepository
+	setFailureTransactionRepository repositories.SetFailureTransactionRepository
+	httpClient                      http.HttpClient
 }
 
-func NewDbAuthorizeTransactionUsecase(saveTransactionRepository repositories.SaveTransactionRepository) *DbAuthorizeTransactionUsecase {
+func NewDbAuthorizeTransactionUsecase(
+	saveTransactionRepository repositories.SaveTransactionRepository,
+	setFailureTransactionRepository repositories.SetFailureTransactionRepository,
+	httpClient http.HttpClient,
+) *DbAuthorizeTransactionUsecase {
 	return &DbAuthorizeTransactionUsecase{
-		saveTransactionRepository: saveTransactionRepository,
+		saveTransactionRepository:       saveTransactionRepository,
+		setFailureTransactionRepository: setFailureTransactionRepository,
+		httpClient:                      httpClient,
 	}
 }
 
@@ -27,6 +34,8 @@ func (u *DbAuthorizeTransactionUsecase) Call(input domain.TransactionInput) erro
 	}
 
 	u.httpClient.Get(APIURL)
+
+	u.setFailureTransactionRepository.SetFailure(input.Id)
 
 	return nil
 }
