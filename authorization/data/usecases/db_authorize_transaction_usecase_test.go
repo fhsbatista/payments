@@ -36,92 +36,74 @@ func (m *MockHttpClient) Get(url string) error {
 	return args.Error(0)
 }
 
-func makeSaveTransactionRepository() *MockSaveTransactionsRepository {
-	repo := new(MockSaveTransactionsRepository)
-	repo.On("Save", mock.Anything).Return(nil) 
-	return repo
+func makeInput() domain.TransactionInput {
+	return domain.TransactionInput{}
 }
 
-func makeSetFailureTransactionRepository() *MockSetFailureTransactionRepository {
-	repo := new(MockSetFailureTransactionRepository)
-	repo.On("SetFailure", mock.Anything).Return(nil) 
-	return repo
+func makeSut(
+	t *testing.T,
+	saveError error,
+	httpError error,
+) (
+	DbAuthorizeTransactionUsecase,
+	*MockSaveTransactionsRepository,
+	*MockSetFailureTransactionRepository,
+	*MockHttpClient,
+) {
+	t.Helper()
+
+	mockSaveRepository := new(MockSaveTransactionsRepository)
+	mockSetFailureTransactionRepository := new(MockSetFailureTransactionRepository)
+	httpClient := new(MockHttpClient)
+
+	mockSaveRepository.On("Save", mock.Anything).Return(saveError)
+	mockSetFailureTransactionRepository.On("SetFailure", mock.Anything).Return(nil)
+	httpClient.On("Get", mock.Anything).Return(httpError)
+
+	sut := DbAuthorizeTransactionUsecase{
+		mockSaveRepository,
+		mockSetFailureTransactionRepository,
+		httpClient,
+	}
+
+	return sut, mockSaveRepository, mockSetFailureTransactionRepository,httpClient
 }
 
 func Test_ShouldCallRepositoryCorrectly(t *testing.T) {
-	input := domain.TransactionInput{}
-	mockSaveRepository := makeSaveTransactionRepository()
-	mockSetFailureTransactionRepository := makeSetFailureTransactionRepository()
-	httpClient := new(MockHttpClient)
-	httpClient.On("Get", mock.Anything).Return(nil)
+	sut, saveRepository,  _, _ := makeSut(t, nil, nil)
+	input := makeInput()
 
-	usecase := DbAuthorizeTransactionUsecase{
-		mockSaveRepository,
-		mockSetFailureTransactionRepository,
-		httpClient,
-	}
+	sut.Call(input)
 
-	usecase.Call(input)
-
-	mockSaveRepository.AssertCalled(t, "Save", input)
-	mockSaveRepository.AssertExpectations(t)
+	saveRepository.AssertCalled(t, "Save", input)
+	saveRepository.AssertExpectations(t)
 }
 
 func Test_ShouldReturnErrorIfRepositoryFails(t *testing.T) {
-	input := domain.TransactionInput{}
-	mockSaveRepository := new(MockSaveTransactionsRepository)
-	expectedError := errors.New("Could not save transaction")
-	mockSaveRepository.On("Save", input).Return(expectedError)
-	mockSetFailureTransactionRepository := makeSetFailureTransactionRepository()
-	httpClient := new(MockHttpClient)
-	httpClient.On("Get", mock.Anything).Return(nil)
+	error := errors.New("Could not save transaction")
+	sut, _,  _, _ := makeSut(t, error, nil)
 
-	usecase := DbAuthorizeTransactionUsecase{
-		mockSaveRepository,
-		mockSetFailureTransactionRepository,
-		httpClient,
-	}
+	err := sut.Call(makeInput())
 
-	err := usecase.Call(input)
-
-	assert.Equal(t, expectedError, err, "error should be the expected")
+	assert.Equal(t, error, err, "error should be the expected")
 }
 
 func Test_ShouldCallHttpClientCorrectly(t *testing.T) {
-	input := domain.TransactionInput{}
-	mockSaveRepository := new(MockSaveTransactionsRepository)
-	mockSaveRepository.On("Save", input).Return(nil)
-	mockSetFailureTransactionRepository := makeSetFailureTransactionRepository()
-	httpClient := new(MockHttpClient)
-	httpClient.On("Get", mock.Anything).Return(nil)
-	usecase := DbAuthorizeTransactionUsecase{
-		mockSaveRepository,
-		mockSetFailureTransactionRepository,
-		httpClient,
-	}
+	sut, _,  _, httpClient := makeSut(t, nil, nil)
 
-	usecase.Call(input)
+	sut.Call(makeInput())
 
 	httpClient.AssertCalled(t, "Get", APIURL)
 	httpClient.AssertExpectations(t)
 }
 
 func Test_ShouldCallSetFailureTransactionOnHttpFailure(t *testing.T) {
-	input := domain.TransactionInput{Id: 1}
-	mockSaveRepository := new(MockSaveTransactionsRepository)
-	mockSaveRepository.On("Save", input).Return(nil)
-	mockSetFailureTransactionRepository := makeSetFailureTransactionRepository()
-	httpClient := new(MockHttpClient)
 	error := errors.New("Authorization failed")
-	httpClient.On("Get", mock.Anything).Return(error)
-	usecase := DbAuthorizeTransactionUsecase{
-		mockSaveRepository,
-		mockSetFailureTransactionRepository,
-		httpClient,
-	}
+	sut, _,  setFailureRepository, _ := makeSut(t, nil, error)
+	input := makeInput()
 
-	usecase.Call(input)
+	sut.Call(makeInput())
 
-	mockSetFailureTransactionRepository.AssertCalled(t, "SetFailure", input.Id)
-	httpClient.AssertExpectations(t)
+	setFailureRepository.AssertCalled(t, "SetFailure", input.Id)
+	setFailureRepository.AssertExpectations(t)
 }
