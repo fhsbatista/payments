@@ -44,6 +44,15 @@ func (u *DbAuthorizeTransactionUsecase) Call(input domain.TransactionInput) erro
 
 	if err != nil {
 		u.setFailureTransactionRepository.SetFailure(input.Id)
+		authorization := domain.Authorization{
+			Id: input.Id,
+			PayerId: input.PayeeId,
+			PayeeId: input.PayeeId,
+			Amount: input.Amount,
+			Time: input.Time,
+			Status: domain.Declined,
+		}
+		u.eventPublisher.Publish(authorization)
 		return nil
 	}
 

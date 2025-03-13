@@ -140,6 +140,25 @@ func Test_ShouldCallSetFailureTransactionOnHttpFailure(t *testing.T) {
 	setFailureRepository.AssertExpectations(t)
 }
 
+func Test_ShouldCallEventPublisherWithDeclinedOnHttpSuccess(t *testing.T) {
+	error := errors.New("Authorization failed")
+	sut, _, _, _, _, eventPublisher := makeSut(t, nil, error, nil)
+	input := makeInput()
+
+	sut.Call(makeInput())
+
+	expectedAuthorization := domain.Authorization{
+		Id: input.Id,
+		PayerId: input.PayeeId,
+		PayeeId: input.PayeeId,
+		Amount: input.Amount,
+		Time: input.Time,
+		Status: domain.Declined,
+	}
+	eventPublisher.AssertCalled(t, "Publish", expectedAuthorization)
+	eventPublisher.AssertExpectations(t)
+}
+
 func Test_ShouldCallSetSuccessTransactionOnHttpSuccess(t *testing.T) {
 	sut, _, setFailureRepository, setSuccessRepository, _, _ := makeSut(t, nil, nil, nil)
 	input := makeInput()
@@ -151,7 +170,7 @@ func Test_ShouldCallSetSuccessTransactionOnHttpSuccess(t *testing.T) {
 	setSuccessRepository.AssertExpectations(t)
 }
 
-func Test_ShouldCallEventPublisherOnHttpSuccess(t *testing.T) {
+func Test_ShouldCallEventPublisherWithAuthorizedOnHttpSuccess(t *testing.T) {
 	sut, _, _, _, _, eventPublisher := makeSut(t, nil, nil, nil)
 	input := makeInput()
 
