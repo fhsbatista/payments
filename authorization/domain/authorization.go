@@ -14,10 +14,11 @@ const (
 )
 
 type Authorization struct {
-	Id      int64
-	PayerId int64
-	PayeeId int64
-	Amount  big.Float
-	Time    time.Time
-	Status  Status
+	Id            int64
+	TransactionId int64
+	PayerId       int64
+	PayeeId       int64
+	Amount        big.Float
+	Time          time.Time
+	Status        Status
 }

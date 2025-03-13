@@ -34,7 +34,7 @@ func NewDbAuthorizeTransactionUsecase(
 }
 
 func (u *DbAuthorizeTransactionUsecase) Call(input domain.TransactionInput) error {
-	err := u.saveTransactionRepository.Save(input)
+	authorization, err := u.saveTransactionRepository.Save(input)
 
 	if err != nil {
 		return err
@@ -43,13 +43,13 @@ func (u *DbAuthorizeTransactionUsecase) Call(input domain.TransactionInput) erro
 	err = u.httpClient.Get(APIURL)
 
 	if err != nil {
-		u.setFailureTransactionRepository.SetFailure(input.Id)
-		u.eventPublisher.Publish(input.ToAuthorization(domain.Declined))
+		u.setFailureTransactionRepository.SetFailure(input.TransactionId)
+		u.eventPublisher.Publish(input.ToAuthorization(authorization.Id, domain.Declined))
 		return nil
 	}
 
-	u.setSuccessTransactionRepository.SetSuccess(input.Id)
-	u.eventPublisher.Publish(input.ToAuthorization(domain.Authorized))
+	u.setSuccessTransactionRepository.SetSuccess(input.TransactionId)
+	u.eventPublisher.Publish(input.ToAuthorization(authorization.Id, domain.Authorized))
 
 	return nil
 }

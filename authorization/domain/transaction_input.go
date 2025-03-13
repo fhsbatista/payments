@@ -6,21 +6,22 @@ import (
 )
 
 type TransactionInput struct {
-	Id int64
-	PayeerId int64
-	PayeeId int64
-	Amount big.Float
-	Time time.Time
-	Status string
+	TransactionId int64
+	PayerId       int64
+	PayeeId       int64
+	Amount        big.Float
+	Time          time.Time
+	Status        string
 }
 
-func (t *TransactionInput) ToAuthorization(status Status) Authorization {
+func (t *TransactionInput) ToAuthorization(id int64, status Status) Authorization {
 	return Authorization{
-		Id: t.Id,
-		PayerId: t.PayeeId,
-		PayeeId: t.PayeeId,
-		Amount: t.Amount,
-		Time: t.Time,
-		Status: status,
+		Id:            id,
+		TransactionId: t.TransactionId,
+		PayerId:       t.PayeeId,
+		PayeeId:       t.PayeeId,
+		Amount:        t.Amount,
+		Time:          t.Time,
+		Status:        status,
 	}
 }

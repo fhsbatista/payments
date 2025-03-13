@@ -3,7 +3,9 @@ package usecases
 import (
 	"authorization/domain"
 	"errors"
+	"math/big"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -13,9 +15,10 @@ type MockSaveTransactionsRepository struct {
 	mock.Mock
 }
 
-func (m *MockSaveTransactionsRepository) Save(input domain.TransactionInput) error {
+func (m *MockSaveTransactionsRepository) Save(input domain.TransactionInput) (*domain.Authorization, error) {
 	args := m.Called(input)
-	return args.Error(0)
+	auth, _ := args.Get(0).(domain.Authorization)
+	return &auth, args.Error(1)
 }
 
 type MockSetFailureTransactionRepository struct {
@@ -58,6 +61,17 @@ func makeInput() domain.TransactionInput {
 	return domain.TransactionInput{}
 }
 
+func makeAuthorization() domain.Authorization {
+	return domain.Authorization{
+		Id:      1,
+		PayerId: 2,
+		PayeeId: 3,
+		Amount:  *big.NewFloat(2.0),
+		Time:    time.Now(),
+		Status:  domain.Pending,
+	}
+}
+
 func makeSut(
 	t *testing.T,
 	saveError error,
@@ -65,6 +79,7 @@ func makeSut(
 	eventPublishError error,
 ) (
 	DbAuthorizeTransactionUsecase,
+	domain.Authorization,
 	*MockSaveTransactionsRepository,
 	*MockSetFailureTransactionRepository,
 	*MockSetSuccessTransactionRepository,
@@ -78,8 +93,14 @@ func makeSut(
 	mockSetSuccessTransactionRepository := new(MockSetSuccessTransactionRepository)
 	httpClient := new(MockHttpClient)
 	eventPublisher := new(MockEventPublisher)
+	authorization := makeAuthorization()
 
-	mockSaveRepository.On("Save", mock.Anything).Return(saveError)
+	if saveError != nil {
+		mockSaveRepository.On("Save", mock.Anything).Return(nil, saveError)
+	} else {
+		mockSaveRepository.On("Save", mock.Anything).Return(authorization, nil)
+	}
+
 	mockSetFailureTransactionRepository.On("SetFailure", mock.Anything).Return(nil)
 	mockSetSuccessTransactionRepository.On("SetSuccess", mock.Anything).Return(nil)
 	httpClient.On("Get", mock.Anything).Return(httpError)
@@ -94,6 +115,7 @@ func makeSut(
 	}
 
 	return sut,
+		authorization,
 		mockSaveRepository,
 		mockSetFailureTransactionRepository,
 		mockSetSuccessTransactionRepository,
@@ -102,7 +124,7 @@ func makeSut(
 }
 
 func Test_ShouldCallRepositoryCorrectly(t *testing.T) {
-	sut, saveRepository, _, _, _, _ := makeSut(t, nil, nil, nil)
+	sut, _, saveRepository, _, _, _, _ := makeSut(t, nil, nil, nil)
 	input := makeInput()
 
 	sut.Call(input)
@@ -113,7 +135,7 @@ func Test_ShouldCallRepositoryCorrectly(t *testing.T) {
 
 func Test_ShouldReturnErrorIfRepositoryFails(t *testing.T) {
 	error := errors.New("Could not save transaction")
-	sut, _, _, _, _, _ := makeSut(t, error, nil, nil)
+	sut, _, _, _, _, _, _ := makeSut(t, error, nil, nil)
 
 	err := sut.Call(makeInput())
 
@@ -121,7 +143,7 @@ func Test_ShouldReturnErrorIfRepositoryFails(t *testing.T) {
 }
 
 func Test_ShouldCallHttpClientCorrectly(t *testing.T) {
-	sut, _, _, _, httpClient, _ := makeSut(t, nil, nil, nil)
+	sut, _, _, _, _, httpClient, _ := makeSut(t, nil, nil, nil)
 
 	sut.Call(makeInput())
 
@@ -131,43 +153,43 @@ func Test_ShouldCallHttpClientCorrectly(t *testing.T) {
 
 func Test_ShouldCallSetFailureTransactionOnHttpFailure(t *testing.T) {
 	error := errors.New("Authorization failed")
-	sut, _, setFailureRepository, _, _, _ := makeSut(t, nil, error, nil)
+	sut, _, _, setFailureRepository, _, _, _ := makeSut(t, nil, error, nil)
 	input := makeInput()
 
 	sut.Call(makeInput())
 
-	setFailureRepository.AssertCalled(t, "SetFailure", input.Id)
+	setFailureRepository.AssertCalled(t, "SetFailure", input.TransactionId)
 	setFailureRepository.AssertExpectations(t)
 }
 
 func Test_ShouldCallEventPublisherWithDeclinedOnHttpSuccess(t *testing.T) {
 	error := errors.New("Authorization failed")
-	sut, _, _, _, _, eventPublisher := makeSut(t, nil, error, nil)
+	sut, authorization, _, _, _, _, eventPublisher := makeSut(t, nil, error, nil)
 	input := makeInput()
 
 	sut.Call(makeInput())
 
-	eventPublisher.AssertCalled(t, "Publish", input.ToAuthorization(domain.Declined))
+	eventPublisher.AssertCalled(t, "Publish", input.ToAuthorization(authorization.Id, domain.Declined))
 	eventPublisher.AssertExpectations(t)
 }
 
 func Test_ShouldCallSetSuccessTransactionOnHttpSuccess(t *testing.T) {
-	sut, _, setFailureRepository, setSuccessRepository, _, _ := makeSut(t, nil, nil, nil)
+	sut, _, _, setFailureRepository, setSuccessRepository, _, _ := makeSut(t, nil, nil, nil)
 	input := makeInput()
 
 	sut.Call(makeInput())
 
 	setFailureRepository.AssertNotCalled(t, "SetFailure", mock.Anything)
-	setSuccessRepository.AssertCalled(t, "SetSuccess", input.Id)
+	setSuccessRepository.AssertCalled(t, "SetSuccess", input.TransactionId)
 	setSuccessRepository.AssertExpectations(t)
 }
 
 func Test_ShouldCallEventPublisherWithAuthorizedOnHttpSuccess(t *testing.T) {
-	sut, _, _, _, _, eventPublisher := makeSut(t, nil, nil, nil)
+	sut, authorization, _, _, _, _, eventPublisher := makeSut(t, nil, nil, nil)
 	input := makeInput()
 
 	sut.Call(makeInput())
 
-	eventPublisher.AssertCalled(t, "Publish", input.ToAuthorization(domain.Authorized))
+	eventPublisher.AssertCalled(t, "Publish", input.ToAuthorization(authorization.Id, domain.Authorized))
 	eventPublisher.AssertExpectations(t)
 }
