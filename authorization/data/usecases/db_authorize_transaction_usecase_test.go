@@ -35,9 +35,10 @@ type MockSetSuccessTransactionRepository struct {
 	mock.Mock
 }
 
-func (m *MockSetSuccessTransactionRepository) SetSuccess(id int64) error {
+func (m *MockSetSuccessTransactionRepository) SetSuccess(id int64) (*domain.Authorization, error) {
 	args := m.Called(id)
-	return args.Error(0)
+	auth, _ := args.Get(0).(domain.Authorization)
+	return &auth, args.Error(1)
 }
 
 type MockHttpClient struct {
@@ -102,8 +103,8 @@ func makeSut(
 		mockSaveRepository.On("Save", mock.Anything).Return(authorization, nil)
 	}
 
-	mockSetFailureTransactionRepository.On("SetFailure", mock.Anything).Return(nil)
-	mockSetSuccessTransactionRepository.On("SetSuccess", mock.Anything).Return(nil)
+	mockSetFailureTransactionRepository.On("SetFailure", mock.Anything).Return(nil, nil)
+	mockSetSuccessTransactionRepository.On("SetSuccess", mock.Anything).Return(nil, nil)
 	httpClient.On("Get", mock.Anything).Return(httpError)
 	eventPublisher.On("Publish", mock.Anything).Return(eventPublishError)
 
