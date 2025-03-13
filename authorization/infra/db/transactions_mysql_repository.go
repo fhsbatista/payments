@@ -4,9 +4,73 @@ import (
 	"authorization/domain"
 	"database/sql"
 	"log"
+	"math/big"
+	"time"
 )
 
 type TransactionsMysqlRepository struct{}
+
+func (repo *TransactionsMysqlRepository) Find(id int64) (*domain.Authorization, error) {
+	uri := "root:root@tcp(127.0.0.1:3306)/test"
+	db, err := sql.Open("mysql", uri)
+	if err != nil {
+		log.Fatal("Could not connect to database")
+	}
+	defer db.Close()
+
+	var a domain.Authorization
+	var amountBytes []byte
+	var timeBytes []byte
+	var status string
+	err = db.QueryRow(
+		"SELECT * FROM AUTHORIZATIONS WHERE id = ? LIMIT 1", 
+		id,
+	).Scan(&id, &a.PayerId, &a.PayeeId, &amountBytes, &timeBytes, &status)
+
+	if err != nil {
+		return nil, err
+	}
+
+	amount, _, err := big.ParseFloat(string(amountBytes), 10, 0, big.ToNearestEven)
+	if err != nil {
+		return nil, err
+	}
+	
+	time, err := time.Parse("2006-01-02 15:04:05", string(timeBytes))
+	if err != nil {
+		return nil, err
+	}
+	
+	a.Amount = *amount
+	a.Time = time
+
+	return &a, nil
+}
+
+func (repo *TransactionsMysqlRepository) SetFailure(id int64) (*domain.Authorization, error) {
+	uri := "root:root@tcp(127.0.0.1:3306)/test"
+	db, err := sql.Open("mysql", uri)
+	if err != nil {
+		log.Fatal("Could not connect to database")
+	}
+	defer db.Close()
+
+	query := "UPDATE AUTHORIZATIONS " +
+	"SET status = ? " +
+	"WHERE id = ?"
+
+	_, err = db.Exec(
+		query,
+		string(domain.Declined),
+		id,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
 
 func (repo *TransactionsMysqlRepository) Save(input domain.TransactionInput) (*domain.Authorization, error) {
 	uri := "root:root@tcp(127.0.0.1:3306)/test"
