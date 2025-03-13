@@ -27,6 +27,15 @@ func (m *MockSetFailureTransactionRepository) SetFailure(id int64) error {
 	return args.Error(0)
 }
 
+type MockSetSuccessTransactionRepository struct {
+	mock.Mock
+}
+
+func (m *MockSetSuccessTransactionRepository) SetSuccess(id int64) error {
+	args := m.Called(id)
+	return args.Error(0)
+}
+
 type MockHttpClient struct {
 	mock.Mock
 }
@@ -48,29 +57,37 @@ func makeSut(
 	DbAuthorizeTransactionUsecase,
 	*MockSaveTransactionsRepository,
 	*MockSetFailureTransactionRepository,
+	*MockSetSuccessTransactionRepository,
 	*MockHttpClient,
 ) {
 	t.Helper()
 
 	mockSaveRepository := new(MockSaveTransactionsRepository)
 	mockSetFailureTransactionRepository := new(MockSetFailureTransactionRepository)
+	mockSetSuccessTransactionRepository := new(MockSetSuccessTransactionRepository)
 	httpClient := new(MockHttpClient)
 
 	mockSaveRepository.On("Save", mock.Anything).Return(saveError)
 	mockSetFailureTransactionRepository.On("SetFailure", mock.Anything).Return(nil)
+	mockSetSuccessTransactionRepository.On("SetSuccess", mock.Anything).Return(nil)
 	httpClient.On("Get", mock.Anything).Return(httpError)
 
 	sut := DbAuthorizeTransactionUsecase{
 		mockSaveRepository,
 		mockSetFailureTransactionRepository,
+		mockSetSuccessTransactionRepository,
 		httpClient,
 	}
 
-	return sut, mockSaveRepository, mockSetFailureTransactionRepository,httpClient
+	return sut,
+		mockSaveRepository,
+		mockSetFailureTransactionRepository,
+		mockSetSuccessTransactionRepository,
+		httpClient
 }
 
 func Test_ShouldCallRepositoryCorrectly(t *testing.T) {
-	sut, saveRepository,  _, _ := makeSut(t, nil, nil)
+	sut, saveRepository, _, _, _ := makeSut(t, nil, nil)
 	input := makeInput()
 
 	sut.Call(input)
@@ -81,7 +98,7 @@ func Test_ShouldCallRepositoryCorrectly(t *testing.T) {
 
 func Test_ShouldReturnErrorIfRepositoryFails(t *testing.T) {
 	error := errors.New("Could not save transaction")
-	sut, _,  _, _ := makeSut(t, error, nil)
+	sut, _, _, _, _ := makeSut(t, error, nil)
 
 	err := sut.Call(makeInput())
 
@@ -89,7 +106,7 @@ func Test_ShouldReturnErrorIfRepositoryFails(t *testing.T) {
 }
 
 func Test_ShouldCallHttpClientCorrectly(t *testing.T) {
-	sut, _,  _, httpClient := makeSut(t, nil, nil)
+	sut, _, _, _, httpClient := makeSut(t, nil, nil)
 
 	sut.Call(makeInput())
 
@@ -99,11 +116,22 @@ func Test_ShouldCallHttpClientCorrectly(t *testing.T) {
 
 func Test_ShouldCallSetFailureTransactionOnHttpFailure(t *testing.T) {
 	error := errors.New("Authorization failed")
-	sut, _,  setFailureRepository, _ := makeSut(t, nil, error)
+	sut, _, setFailureRepository, _, _ := makeSut(t, nil, error)
 	input := makeInput()
 
 	sut.Call(makeInput())
 
 	setFailureRepository.AssertCalled(t, "SetFailure", input.Id)
 	setFailureRepository.AssertExpectations(t)
+}
+
+func Test_ShouldCallSetSuccessTransactionOnHttpSuccess(t *testing.T) {
+	sut, _, setFailureRepository, setSuccessRepository, _ := makeSut(t, nil, nil)
+	input := makeInput()
+
+	sut.Call(makeInput())
+
+	setFailureRepository.AssertNotCalled(t, "SetFailure", mock.Anything)
+	setSuccessRepository.AssertCalled(t, "SetSuccess", input.Id)
+	setSuccessRepository.AssertExpectations(t)
 }
