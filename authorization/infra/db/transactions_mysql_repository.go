@@ -73,6 +73,32 @@ func (repo *TransactionsMysqlRepository) SetFailure(id int64) (*domain.Authoriza
 	return nil, nil
 }
 
+
+func (repo *TransactionsMysqlRepository) SetSuccess(id int64) (*domain.Authorization, error) {
+	uri := "root:root@tcp(127.0.0.1:3306)/test"
+	db, err := sql.Open("mysql", uri)
+	if err != nil {
+		log.Fatal("Could not connect to database")
+	}
+	defer db.Close()
+
+	query := "UPDATE AUTHORIZATIONS " +
+	"SET status = ? " +
+	"WHERE id = ?"
+
+	_, err = db.Exec(
+		query,
+		string(domain.Authorized),
+		id,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
 func (repo *TransactionsMysqlRepository) Save(input domain.TransactionInput) (*domain.Authorization, error) {
 	uri := "root:root@tcp(127.0.0.1:3306)/test"
 	db, err := sql.Open("mysql", uri)
