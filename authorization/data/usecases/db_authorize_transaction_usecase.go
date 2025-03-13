@@ -44,28 +44,12 @@ func (u *DbAuthorizeTransactionUsecase) Call(input domain.TransactionInput) erro
 
 	if err != nil {
 		u.setFailureTransactionRepository.SetFailure(input.Id)
-		authorization := domain.Authorization{
-			Id: input.Id,
-			PayerId: input.PayeeId,
-			PayeeId: input.PayeeId,
-			Amount: input.Amount,
-			Time: input.Time,
-			Status: domain.Declined,
-		}
-		u.eventPublisher.Publish(authorization)
+		u.eventPublisher.Publish(input.ToAuthorization(domain.Declined))
 		return nil
 	}
 
 	u.setSuccessTransactionRepository.SetSuccess(input.Id)
-	authorization := domain.Authorization{
-		Id: input.Id,
-		PayerId: input.PayeeId,
-		PayeeId: input.PayeeId,
-		Amount: input.Amount,
-		Time: input.Time,
-		Status: domain.Authorized,
-	}
-	u.eventPublisher.Publish(authorization)
+	u.eventPublisher.Publish(input.ToAuthorization(domain.Authorized))
 
 	return nil
 }

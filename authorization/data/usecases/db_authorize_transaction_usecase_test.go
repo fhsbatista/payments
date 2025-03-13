@@ -147,15 +147,7 @@ func Test_ShouldCallEventPublisherWithDeclinedOnHttpSuccess(t *testing.T) {
 
 	sut.Call(makeInput())
 
-	expectedAuthorization := domain.Authorization{
-		Id: input.Id,
-		PayerId: input.PayeeId,
-		PayeeId: input.PayeeId,
-		Amount: input.Amount,
-		Time: input.Time,
-		Status: domain.Declined,
-	}
-	eventPublisher.AssertCalled(t, "Publish", expectedAuthorization)
+	eventPublisher.AssertCalled(t, "Publish", input.ToAuthorization(domain.Declined))
 	eventPublisher.AssertExpectations(t)
 }
 
@@ -176,14 +168,6 @@ func Test_ShouldCallEventPublisherWithAuthorizedOnHttpSuccess(t *testing.T) {
 
 	sut.Call(makeInput())
 
-	expectedAuthorization := domain.Authorization{
-		Id: input.Id,
-		PayerId: input.PayeeId,
-		PayeeId: input.PayeeId,
-		Amount: input.Amount,
-		Time: input.Time,
-		Status: domain.Authorized,
-	}
-	eventPublisher.AssertCalled(t, "Publish", expectedAuthorization)
+	eventPublisher.AssertCalled(t, "Publish", input.ToAuthorization(domain.Authorized))
 	eventPublisher.AssertExpectations(t)
 }
