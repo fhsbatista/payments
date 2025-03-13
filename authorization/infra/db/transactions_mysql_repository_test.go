@@ -62,3 +62,21 @@ func TestFind(t *testing.T) {
 		assert.NotNil(t, result)
 	})
 }
+
+func TestSetFailure(t *testing.T) {
+	t.Run("Should return authorization", func (t *testing.T) {
+		authorization := createAuthorization()
+		sut := TransactionsMysqlRepository{}
+	
+		sut.SetFailure(authorization.Id)
+
+		result, _ := sut.Find(authorization.Id)
+	
+		assert.Equal(t, authorization.Id, result.Id)
+		assert.Equal(t, authorization.PayerId, result.PayerId)
+		assert.Equal(t, authorization.PayeeId, result.PayeeId)
+		assert.Equal(t, authorization.Amount, result.Amount)
+		assert.Equal(t, authorization.Time.Truncate(time.Second), result.Time)
+		assert.Equal(t, domain.Declined, result.Status)
+	})
+}

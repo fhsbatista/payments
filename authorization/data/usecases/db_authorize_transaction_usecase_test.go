@@ -25,9 +25,10 @@ type MockSetFailureTransactionRepository struct {
 	mock.Mock
 }
 
-func (m *MockSetFailureTransactionRepository) SetFailure(id int64) error {
+func (m *MockSetFailureTransactionRepository) SetFailure(id int64) (*domain.Authorization, error) {
 	args := m.Called(id)
-	return args.Error(0)
+	auth, _ := args.Get(0).(domain.Authorization)
+	return &auth, args.Error(1)
 }
 
 type MockSetSuccessTransactionRepository struct {
