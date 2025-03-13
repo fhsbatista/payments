@@ -1,6 +1,7 @@
 package usecases
 
 import (
+	"authorization/data/events"
 	"authorization/data/http"
 	"authorization/data/repositories"
 	"authorization/domain"
@@ -13,6 +14,7 @@ type DbAuthorizeTransactionUsecase struct {
 	setFailureTransactionRepository repositories.SetFailureTransactionRepository
 	setSuccessTransactionRepository repositories.SetSuccessTransactionRepository
 	httpClient                      http.HttpClient
+	eventPublisher                  events.EventPublisher
 }
 
 func NewDbAuthorizeTransactionUsecase(
@@ -20,12 +22,14 @@ func NewDbAuthorizeTransactionUsecase(
 	setFailureTransactionRepository repositories.SetFailureTransactionRepository,
 	setSuccessTransactionRepository repositories.SetSuccessTransactionRepository,
 	httpClient http.HttpClient,
+	eventPublisher events.EventPublisher,
 ) *DbAuthorizeTransactionUsecase {
 	return &DbAuthorizeTransactionUsecase{
 		saveTransactionRepository:       saveTransactionRepository,
 		setFailureTransactionRepository: setFailureTransactionRepository,
 		setSuccessTransactionRepository: setSuccessTransactionRepository,
 		httpClient:                      httpClient,
+		eventPublisher:                  eventPublisher,
 	}
 }
 
@@ -44,6 +48,15 @@ func (u *DbAuthorizeTransactionUsecase) Call(input domain.TransactionInput) erro
 	}
 
 	u.setSuccessTransactionRepository.SetSuccess(input.Id)
+	authorization := domain.Authorization{
+		Id: input.Id,
+		PayerId: input.PayeeId,
+		PayeeId: input.PayeeId,
+		Amount: input.Amount,
+		Time: input.Time,
+		Status: domain.Authorized,
+	}
+	u.eventPublisher.Publish(authorization)
 
 	return nil
 }
